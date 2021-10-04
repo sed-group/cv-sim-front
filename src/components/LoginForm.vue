@@ -1,16 +1,15 @@
 <template>
-
-  <v-card id="login-form">
+  <div class="login-form">
 
     <v-toolbar dense flat v-if="show_close_btn">
       <v-spacer></v-spacer>
-      <v-btn icon @click="emit_close_window">
+      <v-btn icon @click="emit_close">
         <v-icon>mdi-window-close</v-icon>
       </v-btn>
     </v-toolbar>
 
     <v-form
-        class="px-10"
+        class="px-10 pb-5"
         @submit.prevent="on_submit"
         v-model="valid"
         ref="login_form"
@@ -31,17 +30,19 @@
           @click:append="show_password = !show_password"
           v-model="password"
       ></v-text-field>
-      <v-btn type="submit" class="my-5" :disabled="!valid">Log in</v-btn>
+
+      <v-row justify="center">
+        <v-btn type="submit" class="my-5" :disabled="!valid" align="center">Log in</v-btn>
+      </v-row>
+
     </v-form>
 
-  </v-card>
-
+  </div>
 </template>
 
 
 <script>
 import AuthService from '../services/auth.service';
-import Vue from "vue";
 
 export default {
   name: "LoginForm",
@@ -64,21 +65,25 @@ export default {
   }),
 
   methods: {
-    emit_close_window() {
-      this.$emit('close-window');
+    emit_close() {
+      this.$emit('close');
     },
     on_submit() {
       if (this.$refs.login_form.validate()) {
-        const authenticationData = {
-          username: this.email,
-          password: this.password,
-        };
-        AuthService.login(authenticationData)
+        AuthService.login({username: this.email, password: this.password})
             .then(() => {
-              console.log("Logged in successfully")
+              const redirect_path = sessionStorage.getItem('redirectPath');
+              if (!!redirect_path) {
+                this.$router.replace(redirect_path);
+                sessionStorage.removeItem('redirectPath');
+              } else {
+                this.$router.replace({name: 'Dashboard'});
+              }
             })
-            .catch(() => {
-              console.log("No soup for you")
+            .catch(error => {
+              console.log(error)
+              console.log('No soup for you')
+              /*handle errors*/
             });
       }
     },
@@ -94,12 +99,5 @@ function validate_email(email) {
 
 
 <style scoped>
-
-#login-form {
-  position: absolute;
-  z-index: 3;
-
-  pointer-events: auto;
-}
 
 </style>

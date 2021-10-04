@@ -1,8 +1,9 @@
+import Vue from 'vue';
+import Vuex from 'vuex';
+
 import {IndividualModule} from './individual.module';
 import {ProjectModule} from './project.module';
 import {UserModule} from './user.module';
-import Vue from 'vue'
-import Vuex from 'vuex'
 
 Vue.use(Vuex);
 

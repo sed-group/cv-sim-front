@@ -1,9 +1,9 @@
 <template>
-  <v-card id="signup-form" width="500">
+  <div class="signup-form">
 
     <v-toolbar dense flat v-if="show_close_btn">
       <v-spacer></v-spacer>
-      <v-btn icon @click="emit_close_window">
+      <v-btn icon @click="emit_close">
         <v-icon>mdi-window-close</v-icon>
       </v-btn>
     </v-toolbar>
@@ -17,14 +17,15 @@
               type="text"
               v-model="firstname"
               :rules="rules.firstname_rules"
+              class="mr-2"
           ></v-text-field>
-          <v-spacer></v-spacer>
           <v-text-field
               required
               label="Last name"
               type="text"
               v-model="lastname"
               :rules="rules.lastname_rules"
+              class="ml-2"
           ></v-text-field>
         </v-row>
 
@@ -68,7 +69,7 @@
       </v-col>
     </v-form>
 
-  </v-card>
+  </div>
 </template>
 
 
@@ -112,8 +113,8 @@ export default {
   }),
 
   methods: {
-    emit_close_window() {
-      this.$emit('close-window');
+    emit_close() {
+      this.$emit('close');
     },
     passwords_match() {
       return () => this.password === this.confirm_password || "Passwords must match";
@@ -136,12 +137,5 @@ function validate_email(email) {
 
 
 <style scoped>
-
-#signup-form {
-  position: absolute;
-  z-index: 3;
-
-  pointer-events: auto;
-}
 
 </style>

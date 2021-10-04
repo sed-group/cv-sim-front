@@ -2,11 +2,17 @@
   <v-system-bar app height="60">
 
     <!-- logo -->
-    <router-link :to="{ name: 'ProjectView' }">
+    <router-link :to="{ name: 'Dashboard' }" class="mr-4">
       <v-img src="@/assets/logo.png" contain max-width="50" alt="CV-S logo" v-ripple></v-img>
     </router-link>
 
+    <v-btn :to="{ name:'About' }" exact text small>About</v-btn>
+    <v-btn :to="{ name:'Help' }" exact text small>Help</v-btn>
+    <v-btn :to="{ name:'Contact' }" exact text small>Contact</v-btn>
+
     <v-spacer></v-spacer>
+
+    <span>logged in as: <b v-if="user">{{ user.username }}</b></span>
 
     <!-- Account options -->
     <v-menu
@@ -27,7 +33,7 @@
 
       <v-list>
         <v-list-item disabled>
-          <v-list-item-title>signed in as: <b>{{ user.username }}</b></v-list-item-title>
+          <v-list-item-title>signed in as: <b v-if="user">{{ user.username }}</b></v-list-item-title>
         </v-list-item>
         <v-list-item link class="justify-center">
           <v-list-item-title>Account settings</v-list-item-title>
@@ -43,19 +49,24 @@
 
 <script>
 
-import router from "@/router";
+import AuthService from '@/services/auth.service';
+import router from '@/router';
 
 export default {
-  name: "SystemBar",
+  name: 'SystemBar',
 
   props: ['user'],
 
+  data: () => ({}),
+
   methods: {
     log_out() {
-      this.$emit('log-out');
+      AuthService.logout();
+      router.push({name: 'Home'});
     },
   },
-}
+
+};
 </script>
 
 <style scoped>

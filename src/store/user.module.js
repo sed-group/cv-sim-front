@@ -3,7 +3,7 @@ export const UserModule = {
 
     state: {
         user: null,
-        logged_in: false,
+        loggedIn: false,
     },
 
     mutations: {
@@ -11,8 +11,8 @@ export const UserModule = {
             state.user = user;
         },
         SET_LOGGED_IN(state, loggedIn) {
-            state.logged_in = loggedIn;
-        },
+            state.loggedIn = loggedIn;
+        }
     },
 
     actions: {
@@ -21,6 +21,6 @@ export const UserModule = {
         },
         setLoggedIn({commit}, loggedIn) {
             commit('SET_LOGGED_IN', loggedIn);
-        },
+        }
     },
 }

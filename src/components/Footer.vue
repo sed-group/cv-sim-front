@@ -1,7 +1,8 @@
 <template>
   <v-footer app class="justify-center align-center">
     <small v-if="logged_in === true">We are logged in</small>
-    <small v-else>We are logged out</small>
+    <small v-if="logged_in === false">We are logged out</small>
+    <span v-model="logged_in">{{ logged_in }}</span>
   </v-footer>
 </template>
 
@@ -16,6 +17,7 @@ export default {
     the_year: (new Date).getFullYear(),
   }),
 }
+
 </script>
 
 

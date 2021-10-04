@@ -1,8 +1,8 @@
 import axios from 'axios';
 import store from './store'
 
+import Notification from './models/utils/Notification'
 import AuthService from './services/auth.service';
-import Vue from 'vue';
 
 
 const httpClient = () => {
@@ -24,28 +24,30 @@ const httpClient = () => {
     })
 
     instance.interceptors.response.use((response) => {
-        return response
+        return response;
     }, (err) => {
         if (err.response.status === 401) {
             AuthService.logout();
             return err;
         } else {
-            console.error(err.stack)
+            console.error(err.stack);
         }
 
         // Create a notification. Try to get response detail message.
         let message = err.message;
         try {
             if (err.response.data.detail) {
-                message = err.response.data.detail
+                message = err.response.data.detail;
             }
         } finally {
+            const notification = new Notification('error', message);
+            store.dispatch('addNotification', notification);
         }
 
-        return err
-    })
+        return err;
+    });
 
-    return instance
-}
+    return instance;
+};
 
 export default httpClient();
