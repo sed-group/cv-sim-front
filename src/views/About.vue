@@ -11,6 +11,25 @@
   </div>
 </template>
 
+
+<script>
+
+export default {
+  name: 'About',
+
+  components: {},
+
+  data: () => ({}),
+
+  methods: {},
+
+  mounted() {
+  },
+};
+
+</script>
+
+
 <style scoped>
 
 .about {

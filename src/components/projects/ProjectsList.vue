@@ -6,11 +6,13 @@
         class="mx-5 mt-1"
     >
 
-      <v-hover v-for="project in projects" v-slot="{ hover }">
+      <v-hover v-for="(project, index) in projects" v-slot="{ hover }">
         <v-list-item
-            :id="'project-with-id-' + project.id"
-            link
+            :class="'project-with-id-' + project.id"
+            :to="{ name:'Workbench', params: { project_id: project.id } }"
+            exact
         >
+
           <v-list-item-icon>
             <v-icon>mdi-folder</v-icon>
           </v-list-item-icon>
@@ -23,7 +25,7 @@
 
           <v-fade-transition>
             <v-list-item-action v-show="hover" class="pr-5">
-              <v-btn text>Open</v-btn>
+              <v-btn text :to="{ name:'Workbench', project_id: project.id }" exact>Open</v-btn>
             </v-list-item-action>
           </v-fade-transition>
 
@@ -36,7 +38,7 @@
           <v-list-item-action>
             <v-btn
                 icon
-                @click="delete_project(project.id)"
+                @click="delete_project(project)"
             >
               <v-icon>mdi-delete</v-icon>
             </v-btn>
@@ -59,8 +61,7 @@ export default {
   props: ['projects'],
 
   methods: {
-    delete_project(id) {
-      const project = this.projects.find(x => x.id === id);
+    delete_project(project) {
       this.$emit('project-delete', project);
     },
   },

@@ -8,8 +8,9 @@
       <v-card
           width="190"
           height="190"
-          link
-          :class="{ 'on-hover': hover }"
+          :class="{ 'on-hover': hover, ['project-with-id-' + project.id]: true }"
+          :to="{ name:'Workbench', project_id: project.id }"
+          exact
       >
 
         <v-img src="https://brokenchalk.org/wp-content/uploads/2021/08/Project-2.png" cover style="height: 60%">
@@ -22,10 +23,7 @@
             >
               <v-spacer></v-spacer>
 
-              <v-menu
-                  offset-y
-              >
-
+              <v-menu offset-y>
                 <template v-slot:activator="{ on, attrs }">
                   <v-btn
                       color="white"
@@ -38,7 +36,7 @@
                 </template>
 
                 <v-list>
-                  <v-list-item link>
+                  <v-list-item link @click="duplicate_project(project)">
                     <v-list-item-title>Duplicate</v-list-item-title>
                   </v-list-item>
 
@@ -49,7 +47,7 @@
                     </v-list-item-icon>
                   </v-list-item>
 
-                  <v-list-item link>
+                  <v-list-item link @click="delete_project(project)">
                     <v-list-item-title>Delete</v-list-item-title>
                     <v-list-item-icon>
                       <v-icon>mdi-delete</v-icon>
@@ -85,9 +83,32 @@
 
 <script>
 
+import CVSProjectService from '@/services/cvs-project.service';
+
 export default {
   name: 'ProjectsCards',
+
   props: ['projects'],
+
+  methods: {
+    delete_project(project) {
+      this.$emit('project-delete', project);
+    },
+
+    duplicate_project(project) {
+      const new_project = {
+        name: project.name + ' - COPY',
+        description: project.description,
+      };
+      CVSProjectService.create_project(new_project)
+          .catch(error => {
+            console.error(error);
+          })
+          .then(project => {
+            this.$emit('project-created', project);
+          });
+    },
+  },
 };
 
 </script>

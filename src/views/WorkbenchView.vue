@@ -2,14 +2,18 @@
 
   <div class="working-view">
 
-    <SystemBar :user="user"></SystemBar>
+<!--    <SystemBar :user="user"></SystemBar>-->
 
-    <v-app-bar app clipped-left clipped-right>
-      <Menubar :menu_items="menu_items"></Menubar>
+    <v-app-bar
+        app
+        clipped-left
+        clipped-right
+    >
+      <WorkbenchMenubar :menu_items="menu_items"></WorkbenchMenubar>
     </v-app-bar>
 
     <v-navigation-drawer app clipped permanent id="project-element-container">
-      <ProjectElementContainer></ProjectElementContainer>
+      <WorkbenchSidebar></WorkbenchSidebar>
     </v-navigation-drawer>
 
     <v-navigation-drawer app right clipped permanent id="details-box">
@@ -25,20 +29,20 @@
 
 <script>
 
-import Menubar from "@/components/Menubar";
+import WorkbenchMenubar from "@/components/workbench/WorkbenchMenubar";
 import DetailsBox from "@/components/DetailsBox";
 import WorkArea from "@/components/WorkArea";
-import ProjectElementContainer from "@/components/ProjectElementContainer";
+import WorkbenchSidebar from "@/components/workbench/WorkbenchSidebar";
 import SystemBar from "@/components/SystemBar";
 
 export default {
-  name: 'WorkingView',
+  name: 'WorkbenchView',
 
   components: {
-    Menubar,
+    WorkbenchMenubar,
     DetailsBox,
     WorkArea,
-    ProjectElementContainer,
+    WorkbenchSidebar,
     SystemBar,
   },
 

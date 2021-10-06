@@ -1,83 +1,110 @@
 <template>
   <div class="dashboard">
 
+    <SystemBar
+        :user="user"
+    ></SystemBar>
+
     <v-navigation-drawer
         app
         permanent
-        class="align-center pt-5"
     >
-      <v-btn @click.stop="show_project_form = true">
-        + Project
-      </v-btn>
+      <v-list class="mt-5">
+        <v-list-item-group v-model="sidebar_nav_selection">
+
+          <v-list-item link>
+            <v-list-item-icon>
+              <v-icon v-if="outline">mdi-view-dashboard-outline</v-icon>
+              <v-icon v-else>mdi-view-dashboard</v-icon>
+            </v-list-item-icon>
+            <v-list-item-title>Projects</v-list-item-title>
+          </v-list-item>
+
+          <v-list-item link>
+            <v-list-item-icon>
+              <v-icon v-if="outline">mdi-bookmark-multiple-outline</v-icon>
+              <v-icon v-else>mdi-bookmark-multiple</v-icon>
+            </v-list-item-icon>
+            <v-list-item-title>Templates</v-list-item-title>
+          </v-list-item>
+
+          <v-list-item link>
+            <v-list-item-icon>
+              <v-icon v-if="outline">mdi-alert-circle-outline</v-icon>
+              <v-icon v-else>mdi-alert-circle</v-icon>
+            </v-list-item-icon>
+            <v-list-item-title>Issues</v-list-item-title>
+          </v-list-item>
+
+          <v-list-item link>
+            <v-list-item-icon>
+              <v-icon v-if="outline">mdi-cog-outline</v-icon>
+              <v-icon v-else>mdi-cog</v-icon>
+            </v-list-item-icon>
+            <v-list-item-title>Settings</v-list-item-title>
+          </v-list-item>
+
+        </v-list-item-group>
+      </v-list>
+
+      <v-layout justify-center class="mt-16">
+        <v-btn @click="outline = !outline">Toggle outline</v-btn>
+      </v-layout>
     </v-navigation-drawer>
 
-    <ProjectsView :projects="projects"></ProjectsView>
+    <ProjectsView v-if="sidebar_nav_selection === 0"></ProjectsView>
 
-    <NewProjectForm
-        :show_dialog="show_project_form"
-        @close-dialog="on_close_project_form"
-        @project-created="on_project_created($event)"
-    ></NewProjectForm>
+    <h1 v-if="sidebar_nav_selection === 1" class="ma-5">Templates</h1>
+    <h1 v-if="sidebar_nav_selection === 2" class="ma-5">Issues</h1>
+    <h1 v-if="sidebar_nav_selection === 3" class="ma-5">Settings</h1>
+    <About v-if="this.$route.name === 'About'"></About>
 
   </div>
 </template>
 
 
 <script>
-import ProjectsView from '@/components/projects/ProjectsView';
-import NewProjectForm from '@/components/projects/NewProjectForm';
-import InfoSnackbar from '@/components/InfoSnackbar';
 
-import CVSProjectService from '@/services/cvs-project.service';
+import ProjectsView from '@/components/projects/ProjectsView';
+import SystemBar from '@/components/SystemBar';
+
+import UserService from '@/services/user.service';
+import store from '@/store';
+import User from '@/models/User';
+import About from '@/views/About';
 
 export default {
   name: 'Dashboard',
 
   components: {
-    InfoSnackbar,
-    NewProjectForm,
+    About,
     ProjectsView,
+    SystemBar,
   },
 
   data: () => ({
-    user: {
-      username: 'admin',
-    },
-    projects: [],
-    show_project_form: false,
-    snackbar: false,
-    snackbar_msg: 'This is some nice information.',
+    sidebar_nav_selection: 0,
+    user: null,
+    outline: true,
   }),
 
-  methods: {
-    on_close_project_form() {
-      this.show_project_form = false;
-    },
-
-    on_project_created(project) {
-      this.projects.push(project);
-    },
-
-    update_projects() {
-      CVSProjectService.get_projects(0, 100).then((r) => {
-        const projects = r.chunk;
-        if (!!projects) {
-          this.projects = [];
-          for (let i = 0; i < projects.length; i++) {
-            this.projects.push(projects[i]);
-          }
-          this.projects.sort((a, b) => (a.id > b.id) ? 1 : -1); // sorting based on ascending id
-        }
-      });
-    },
-
-  },
+  methods: {},
 
   mounted() {
-    this.update_projects();
+    if (this.$store.state.User.loggedIn) {
+      UserService.getMe()
+          .then(data => {
+            if (data) {
+              store.dispatch('User/setUser', new User(data));
+            }
+          })
+          .finally(() => {
+            this.user = store.state.User.user;
+          });
+    }
   },
-
 };
+
 </script>
 
 

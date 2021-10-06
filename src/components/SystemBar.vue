@@ -12,13 +12,14 @@
 
     <v-spacer></v-spacer>
 
-    <span>logged in as: <b v-if="user">{{ user.username }}</b></span>
+    <span v-if="!!user">logged in as: <b>{{ user.username }}</b></span>
 
     <!-- Account options -->
     <v-menu
         bottom
         left
         offset-y
+        v-if="!!user"
     >
       <template v-slot:activator="{ on, attrs }">
         <v-btn
@@ -33,7 +34,7 @@
 
       <v-list>
         <v-list-item disabled>
-          <v-list-item-title>signed in as: <b v-if="user">{{ user.username }}</b></v-list-item-title>
+          <v-list-item-title>signed in as: <b>{{ user.username }}</b></v-list-item-title>
         </v-list-item>
         <v-list-item link class="justify-center">
           <v-list-item-title>Account settings</v-list-item-title>

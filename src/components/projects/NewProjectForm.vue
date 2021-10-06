@@ -75,7 +75,7 @@ export default {
   }),
 
   methods: {
-    emit_close_dialog(project) {
+    emit_close_dialog() {
       this.$emit('close-dialog');
     },
 
@@ -90,8 +90,10 @@ export default {
               console.error(error);
             })
             .then(project => {
+              this.project_name = '';
+              this.project_description = '';
               this.$emit('project-created', project);
-              this.emit_close_dialog(project);
+              this.emit_close_dialog();
             });
       }
     },

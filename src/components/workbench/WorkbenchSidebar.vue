@@ -1,5 +1,5 @@
 <template>
-  <div class="project-element-container">
+  <div class="workbench-sidebar">
 
     <v-tabs v-model="tabs" grow>
       <v-tab :key="1">Concepts</v-tab>
@@ -20,11 +20,11 @@
 
 
 <script>
-import Projects2 from "@/components/Projects2";
-import Elements from "@/components/Elements";
+import Projects2 from '@/components/Projects2';
+import Elements from '@/components/Elements';
 
 export default {
-  name: "ProjectElementContainer",
+  name: 'WorkbenchSidebar',
 
   components: {
     Projects2,
@@ -34,9 +34,9 @@ export default {
   data() {
     return {
       tabs: null,
-    }
+    };
   },
-}
+};
 </script>
 
 

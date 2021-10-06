@@ -3,7 +3,7 @@ import VueRouter from 'vue-router';
 import store from '@/store/index';
 
 import Home from '@/views/Home';
-import WorkingView from '@/views/WorkingView';
+import WorkbenchView from '@/views/WorkbenchView';
 import Help from '@/views/Help';
 import About from '@/views/About';
 import Contact from '@/views/Contact';
@@ -48,12 +48,12 @@ const routes = [
         component: Dashboard,
     },
     {
-        name: 'WorkingView',
-        path: '/working-view',
+        name: 'Workbench',
+        path: '/project/:project_id/workbench',
         meta: {
             requiresAuth: true,
         },
-        component: WorkingView,
+        component: WorkbenchView,
     },
     {
         name: 'Help',

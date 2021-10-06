@@ -21,6 +21,11 @@
       </v-btn-toggle>
     </v-toolbar>
 
+
+    <span class="ml-5" v-if="!!projects">Showing {{ projects.length }} of {{ projects.length }} <span
+        v-if="projects.length === 1">project</span><span v-else>projects</span>.</span>
+
+
     <div class="projects-layouts">
       <div class="projects-layouts-first">
         <v-expand-transition mode="in-out">
@@ -28,6 +33,8 @@
               v-show="project_layout_selection === 0"
               :projects="projects"
               :z-index="1"
+              @project-delete="on_project_delete"
+              @project-created="on_project_created"
           ></ProjectCards>
         </v-expand-transition>
       </div>
@@ -43,6 +50,19 @@
       </div>
     </div>
 
+
+    <v-btn
+        style="position: fixed; bottom: 2em; right: 2em"
+        fab
+        x-large
+        color="primary"
+        @click.stop="show_project_form = true"
+        elevation="10"
+    >
+      <v-icon>mdi-plus</v-icon>
+    </v-btn>
+
+
     <ConfirmDialog
         :dialog="confirm_dialog"
         :title="confirm_title"
@@ -53,6 +73,13 @@
         @reject="on_reject"
     ></ConfirmDialog>
 
+
+    <NewProjectForm
+        :show_dialog="show_project_form"
+        @close-dialog="on_close_project_form"
+        @project-created="on_project_created($event)"
+    ></NewProjectForm>
+
   </div>
 </template>
 
@@ -60,8 +87,10 @@
 <script>
 import ProjectCards from '@/components/projects/ProjectsCards';
 import ProjectsList from '@/components/projects/ProjectsList';
-import CVSProjectService from '@/services/cvs-project.service';
 import ConfirmDialog from '@/components/utils/ConfirmDialog';
+import NewProjectForm from '@/components/projects/NewProjectForm';
+
+import CVSProjectService from '@/services/cvs-project.service';
 
 export default {
   name: 'ProjectsView',
@@ -70,12 +99,16 @@ export default {
     ConfirmDialog,
     ProjectCards,
     ProjectsList,
+    NewProjectForm,
   },
 
-  props: ['projects'],
+  props: [],
 
   data: () => ({
     project_layout_selection: parseInt(localStorage.getItem('project_layout_selection')) | 0,
+
+    projects: [],
+    show_project_form: false,
 
     confirm_dialog: false,
     confirm_title: '',
@@ -109,17 +142,26 @@ export default {
       this.confirm_dialog = false;
     },
 
+    on_project_created(project) {
+      this.projects.push(project);
+    },
+
+    on_close_project_form() {
+      this.show_project_form = false;
+    },
+
     delete_project() {
       if (!!this.project_to_delete) {
         const id = this.project_to_delete.id;
         CVSProjectService.delete_project(id)
             .catch(error => {
               console.error(error);
-
             })
             .then(data => {
               if (data === true) {
-                $('#project-with-id-' + id).fadeOut(500);
+                $('.project-with-id-' + id).fadeOut(500, () => {
+                  this.$emit('project-deleted', id);
+                });
               }
             });
       } else {
@@ -128,7 +170,29 @@ export default {
       this.project_to_delete = undefined;
     },
 
+    update_projects() {
+      CVSProjectService.get_projects(0, 100).then((r) => {
+        const projects = r.chunk;
+        if (!!projects) {
+          this.projects = [];
+          for (let i = 0; i < projects.length; i++) {
+            this.projects.push(projects[i]);
+          }
+          this.projects.sort((a, b) => (a.id > b.id) ? 1 : -1); // sorting based on ascending id
+        }
+      });
+    },
+
+    remove_project_from_list(id) {
+      this.projects = this.projects.filter(x => x.id !== id);
+    },
+
   },
+
+  mounted() {
+    this.update_projects();
+  },
+
 };
 
 </script>
