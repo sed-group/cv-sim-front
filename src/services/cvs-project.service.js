@@ -1,44 +1,44 @@
 import httpClient from '../http-client';
 
-const API_EXTENSION = 'cvs/projects/';
+const API_EXTENSION_SINGULAR = 'cvs/project/';
+const API_EXTENSION_PLURAL = 'cvs/projects/';
 
 class CVSProjectService {
 
     async get_projects(index = 0, segmentLength = 10) {
-        const resp = await httpClient.get(API_EXTENSION + 'all', {
+        const response = await httpClient.get(API_EXTENSION_PLURAL + 'all', {
             params: {
                 segment_length: segmentLength,
                 index: index,
             },
         });
-        return resp.data;
+        return response.data;
     }
 
     async get_project(project_id) {
-        const resp = await httpClient.get(API_EXTENSION + project_id);
-        return resp.data;
+        const response = await httpClient.get(API_EXTENSION_SINGULAR + 'get/' + project_id);
+        return response.data;
     }
 
     async create_project(project) {
-        const resp = await httpClient.post(API_EXTENSION + 'create', {
+        const response = await httpClient.post(API_EXTENSION_SINGULAR + 'create', {
             name: project.name,
             description: project.description,
         });
-        return resp.data;
+        return response.data;
+    }
+
+    async edit_project(project) {
+        const response = await httpClient.put(API_EXTENSION_SINGULAR + project.id + '/edit', {
+            name: project.name,
+            description: project.description,
+        });
+        return response.data;
     }
 
     async delete_project(project_id) {
-        const resp = await httpClient.delete(API_EXTENSION + project_id + '/delete/');
-        return resp.data;
-    }
-
-    async putProjectArchetype(projectID, archetypeID) {
-        const resp = await httpClient.put(API_EXTENSION + projectID + '/archetype', null, {
-            params: {
-                individual_archetype_id: archetypeID,
-            },
-        });
-        return resp.data;
+        const response = await httpClient.delete(API_EXTENSION_SINGULAR + project_id + '/delete/');
+        return response.data;
     }
 
 }

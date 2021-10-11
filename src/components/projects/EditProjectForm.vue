@@ -1,14 +1,14 @@
 <template>
-  <div class="new-project-form">
+  <div class="edit-project-form">
 
     <v-dialog
         v-model="show_form"
-        max-width="400"
+        max-width="290"
         persistent
     >
       <v-card>
         <v-card-title class="text-h5">
-          Create new project
+          Edit project
         </v-card-title>
 
         <v-card-text>
@@ -19,26 +19,20 @@
               @submit.prevent="submit"
           >
             <v-text-field
-                v-model="project_name"
                 label="Project name"
+                v-model="project.name"
                 :rules="project_name_rules"
                 :counter="255"
                 required
             ></v-text-field>
             <v-textarea
-                v-model="project_description"
                 label="Description (optional)"
+                v-model="project.description"
             ></v-textarea>
           </v-form>
         </v-card-text>
 
         <v-card-actions>
-          <v-btn
-              text
-              @click="reset_form"
-          >
-            Reset
-          </v-btn>
           <v-spacer></v-spacer>
           <v-btn
               color="red"
@@ -53,13 +47,12 @@
               @click="submit"
               :disabled="!valid"
           >
-            Create
+            Save
           </v-btn>
         </v-card-actions>
 
       </v-card>
     </v-dialog>
-
   </div>
 </template>
 
@@ -68,18 +61,19 @@
 import CVSProjectService from '@/services/cvs-project.service';
 
 export default {
-  name: 'NewProjectForm',
+  name: 'EditProjectForm',
 
-  props: ['show_form'],
+  props: [
+    'show_form',
+    'project',
+  ],
 
   data: () => ({
-    valid: true,
-    project_name: '',
-    project_description: '',
+    valid: false,
 
     project_name_rules: [
-      v => !!v || 'A project name is required',
-      v => v.length <= 255 || 'Must be less than 255 characters',
+      v => !!v || 'A name is required',
+      v => v.length <= 255 || 'Too long',
     ],
   }),
 
@@ -90,30 +84,19 @@ export default {
 
     submit: async function () {
       if (this.$refs.form.validate()) {
-        const project = {
-          name: this.project_name,
-          description: this.project_description,
-        };
-        CVSProjectService.create_project(project)
+        CVSProjectService.edit_project(this.project)
             .catch(error => {
               console.error(error);
             })
             .then(project => {
-              this.reset_form();
-              this.$emit('project-created', project);
+              // this.$emit('project-edited', project);
               this.emit_close_dialog();
             });
       }
     },
-
-    reset_form() {
-      this.project_name = '';
-      this.project_description = '';
-
-      this.$refs.form.resetValidation();
-    },
-
   },
+
+
 };
 </script>
 

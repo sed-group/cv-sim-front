@@ -14,32 +14,28 @@
 
           <v-list-item link>
             <v-list-item-icon>
-              <v-icon v-if="outline">mdi-view-dashboard-outline</v-icon>
-              <v-icon v-else>mdi-view-dashboard</v-icon>
+              <v-icon>mdi-view-dashboard-outline</v-icon>
             </v-list-item-icon>
             <v-list-item-title>Projects</v-list-item-title>
           </v-list-item>
 
           <v-list-item link>
             <v-list-item-icon>
-              <v-icon v-if="outline">mdi-bookmark-multiple-outline</v-icon>
-              <v-icon v-else>mdi-bookmark-multiple</v-icon>
+              <v-icon>mdi-bookmark-multiple-outline</v-icon>
             </v-list-item-icon>
             <v-list-item-title>Templates</v-list-item-title>
           </v-list-item>
 
           <v-list-item link>
             <v-list-item-icon>
-              <v-icon v-if="outline">mdi-alert-circle-outline</v-icon>
-              <v-icon v-else>mdi-alert-circle</v-icon>
+              <v-icon>mdi-alert-circle-outline</v-icon>
             </v-list-item-icon>
             <v-list-item-title>Issues</v-list-item-title>
           </v-list-item>
 
           <v-list-item link>
             <v-list-item-icon>
-              <v-icon v-if="outline">mdi-cog-outline</v-icon>
-              <v-icon v-else>mdi-cog</v-icon>
+              <v-icon>mdi-cog-outline</v-icon>
             </v-list-item-icon>
             <v-list-item-title>Settings</v-list-item-title>
           </v-list-item>
@@ -47,9 +43,6 @@
         </v-list-item-group>
       </v-list>
 
-      <v-layout justify-center class="mt-16">
-        <v-btn @click="outline = !outline">Toggle outline</v-btn>
-      </v-layout>
     </v-navigation-drawer>
 
     <ProjectsView v-if="sidebar_nav_selection === 0"></ProjectsView>
@@ -85,7 +78,6 @@ export default {
   data: () => ({
     sidebar_nav_selection: 0,
     user: null,
-    outline: true,
   }),
 
   methods: {},

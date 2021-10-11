@@ -33,8 +33,9 @@
               v-show="project_layout_selection === 0"
               :projects="projects"
               :z-index="1"
-              @project-delete="on_project_delete"
               @project-created="on_project_created"
+              @project-edit="on_project_edit"
+              @project-delete="on_project_delete"
           ></ProjectCards>
         </v-expand-transition>
       </div>
@@ -44,6 +45,7 @@
               v-show="project_layout_selection === 1"
               :projects="projects"
               :z-index="2"
+              @project-edit="on_project_edit"
               @project-delete="on_project_delete"
           ></ProjectsList>
         </v-expand-transition>
@@ -56,7 +58,7 @@
         fab
         x-large
         color="primary"
-        @click.stop="show_project_form = true"
+        @click.stop="show_new_project_form = true"
         elevation="10"
     >
       <v-icon>mdi-plus</v-icon>
@@ -75,10 +77,17 @@
 
 
     <NewProjectForm
-        :show_dialog="show_project_form"
-        @close-dialog="on_close_project_form"
+        :show_form="show_new_project_form"
+        @close-dialog="on_close_dialog"
         @project-created="on_project_created($event)"
     ></NewProjectForm>
+
+
+    <EditProjectForm
+        :show_form="show_edit_project_form"
+        :project="project_to_edit"
+        @close-dialog="on_close_dialog"
+    ></EditProjectForm>
 
   </div>
 </template>
@@ -91,11 +100,13 @@ import ConfirmDialog from '@/components/utils/ConfirmDialog';
 import NewProjectForm from '@/components/projects/NewProjectForm';
 
 import CVSProjectService from '@/services/cvs-project.service';
+import EditProjectForm from '@/components/projects/EditProjectForm';
 
 export default {
   name: 'ProjectsView',
 
   components: {
+    EditProjectForm,
     ConfirmDialog,
     ProjectCards,
     ProjectsList,
@@ -108,21 +119,20 @@ export default {
     project_layout_selection: parseInt(localStorage.getItem('project_layout_selection')) | 0,
 
     projects: [],
-    show_project_form: false,
+    show_new_project_form: false,
+    show_edit_project_form: false,
 
     confirm_dialog: false,
     confirm_title: '',
     confirm_message: '',
     confirm_btn_confirm: '',
     confirm_btn_reject: '',
+
     project_to_delete: undefined,
+    project_to_edit: {},
   }),
 
   methods: {
-    store_layout_selection() {
-      localStorage.setItem('project_layout_selection', this.project_layout_selection.toString());
-    },
-
     on_project_delete(project) {
       this.project_to_delete = project;
       this.confirm_title = 'Delete project?';
@@ -146,8 +156,18 @@ export default {
       this.projects.push(project);
     },
 
-    on_close_project_form() {
-      this.show_project_form = false;
+    on_close_dialog() {
+      this.show_new_project_form = false;
+      this.show_edit_project_form = false;
+    },
+
+    on_project_edit(project) {
+      this.project_to_edit = project;
+      this.show_edit_project_form = true;
+    },
+
+    store_layout_selection() {
+      localStorage.setItem('project_layout_selection', this.project_layout_selection.toString());
     },
 
     delete_project() {
@@ -181,10 +201,6 @@ export default {
           this.projects.sort((a, b) => (a.id > b.id) ? 1 : -1); // sorting based on ascending id
         }
       });
-    },
-
-    remove_project_from_list(id) {
-      this.projects = this.projects.filter(x => x.id !== id);
     },
 
   },

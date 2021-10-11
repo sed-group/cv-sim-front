@@ -1,64 +1,75 @@
 <template>
-  <div class="project-cards ma-5">
+  <div class="project-cards ma-5" style="padding-bottom: 8em">
 
-    <v-hover
-        v-for="project in projects"
-        v-slot="{ hover }"
+    <v-hover v-for="project in projects"
+             v-slot="{ hover }"
+             open-delay="400"
+             close-delay="400"
     >
-      <v-card
-          width="190"
-          height="190"
-          :class="{ 'on-hover': hover, ['project-with-id-' + project.id]: true }"
-          :to="{ name:'Workbench', project_id: project.id }"
-          exact
+      <v-card width="190"
+              height="190"
+              :class="{ 'on-hover': hover, ['project-with-id-' + project.id]: true }"
+              :to="{ name: 'Workbench', params: { project_id: project.id } }"
+              exact
       >
 
-        <v-img src="https://brokenchalk.org/wp-content/uploads/2021/08/Project-2.png" cover style="height: 60%">
-          <v-expand-transition>
-            <v-app-bar
-                v-show="hover"
-                flat
-                dense
-                style="background: linear-gradient(to bottom, black, transparent)"
-            >
-              <v-spacer></v-spacer>
+        <v-expand-transition>
+          <v-bottom-navigation v-show="hover"
+                               dense
+                               absolute
+                               style="position: absolute; top: 0; left: 0"
+                               @click.prevent
+          >
+            <v-btn :to.prevent="{ name: 'Workbench', params: { project_id: project.id } }">Open</v-btn>
+            <v-spacer @click.prevent style="cursor: default"></v-spacer>
+            <v-menu bottom offset-y>
+              <template v-slot:activator="{ on, attrs }">
+                <v-btn color="black"
+                       v-bind="attrs"
+                       v-on="on"
+                       icon
+                       @click.prevent
+                >
+                  <v-icon>mdi-dots-horizontal</v-icon>
+                </v-btn>
+              </template>
 
-              <v-menu offset-y>
-                <template v-slot:activator="{ on, attrs }">
-                  <v-btn
-                      color="white"
-                      v-bind="attrs"
-                      v-on="on"
-                      icon
-                  >
-                    <v-icon>mdi-dots-vertical</v-icon>
-                  </v-btn>
-                </template>
+              <v-list>
+                <v-list-item link @click.prevent="duplicate_project(project)">
+                  <v-list-item-title>Duplicate</v-list-item-title>
+                  <v-list-item-icon>
+                    <v-icon>mdi-content-duplicate</v-icon>
 
-                <v-list>
-                  <v-list-item link @click="duplicate_project(project)">
-                    <v-list-item-title>Duplicate</v-list-item-title>
-                  </v-list-item>
+                  </v-list-item-icon>
+                </v-list-item>
 
-                  <v-list-item link>
-                    <v-list-item-title>Edit</v-list-item-title>
-                    <v-list-item-icon>
-                      <v-icon>mdi-pencil</v-icon>
-                    </v-list-item-icon>
-                  </v-list-item>
+                <v-list-item link @click.prevent="edit_project(project)">
+                  <v-list-item-title>Edit</v-list-item-title>
+                  <v-list-item-icon>
+                    <v-icon>mdi-pencil</v-icon>
+                  </v-list-item-icon>
+                </v-list-item>
 
-                  <v-list-item link @click="delete_project(project)">
-                    <v-list-item-title>Delete</v-list-item-title>
-                    <v-list-item-icon>
-                      <v-icon>mdi-delete</v-icon>
-                    </v-list-item-icon>
-                  </v-list-item>
-                </v-list>
-              </v-menu>
+                <v-list-item link @click.prevent="delete_project(project)">
+                  <v-list-item-title>Delete</v-list-item-title>
+                  <v-list-item-icon>
+                    <v-icon>mdi-delete</v-icon>
+                  </v-list-item-icon>
+                </v-list-item>
+              </v-list>
+            </v-menu>
 
-            </v-app-bar>
-          </v-expand-transition>
-        </v-img>
+          </v-bottom-navigation>
+        </v-expand-transition>
+
+        <router-link :to="{ name: 'Workbench', params: { project_id: project.id } }">
+          <v-img src="https://brokenchalk.org/wp-content/uploads/2021/08/Project-2.png"
+                 cover
+                 style="height: 60%"
+                 link
+                 class="rounded-t"
+          ></v-img>
+        </router-link>
 
         <v-card-title class="one-line pt-2" style="font-size: 1em">
           <v-icon left>mdi-folder</v-icon>
@@ -90,7 +101,13 @@ export default {
 
   props: ['projects'],
 
+  data: () => ({}),
+
   methods: {
+    edit_project(project) {
+      this.$emit('project-edit', project);
+    },
+
     delete_project(project) {
       this.$emit('project-delete', project);
     },
