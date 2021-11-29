@@ -1,7 +1,9 @@
 <template>
   <div class="projects">
 
-    <v-btn small>+ Concept</v-btn>
+    <v-btn class="my-2 mx-5" small>Edit default life cycle</v-btn>
+    <v-btn class="my-2 mx-5" small>Open concept generator</v-btn>
+    <v-btn class="my-2 mx-5" small>Link concepts to life cycle</v-btn>
 
     <!--
     <v-list
@@ -47,7 +49,17 @@
         <v-list-item-content>
           <v-list-item-title>{{ concept }}</v-list-item-title>
         </v-list-item-content>
+
+        <v-list-item-action>
+          <v-btn icon small>
+            <v-icon>mdi-connection</v-icon>
+          </v-btn>
+        </v-list-item-action>
+
       </v-list-item>
+
+
+      <v-btn small class="ma-5">Create new concept</v-btn>
 
     </v-list>
 
@@ -59,7 +71,7 @@
 <script>
 
 export default {
-  name: "Projects2",
+  name: 'Projects2',
 
   data: () => ({
     selectedItem: 1,
@@ -121,7 +133,7 @@ export default {
     ],
 
   }),
-}
+};
 
 </script>
 

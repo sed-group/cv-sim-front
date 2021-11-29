@@ -6,7 +6,7 @@
         max-width="400"
         persistent
     >
-      <v-card>
+      <v-card :loading="loading" :disabled="loading">
         <v-card-title class="text-h5">
           Create new project
         </v-card-title>
@@ -43,7 +43,7 @@
           <v-btn
               color="red"
               text
-              @click="emit_close_dialog"
+              @click="close"
           >
             Close
           </v-btn>
@@ -66,6 +66,7 @@
 
 <script>
 import CVSProjectService from '@/services/cvs-project.service';
+import Notification from '@/models/utils/Notification';
 
 export default {
   name: 'NewProjectForm',
@@ -73,6 +74,7 @@ export default {
   props: ['show_form'],
 
   data: () => ({
+    loading: true,
     valid: true,
     project_name: '',
     project_description: '',
@@ -84,12 +86,14 @@ export default {
   }),
 
   methods: {
-    emit_close_dialog() {
+    close() {
       this.$emit('close-dialog');
+      this.loading = false;
     },
 
     submit: async function () {
       if (this.$refs.form.validate()) {
+        this.loading = true;
         const project = {
           name: this.project_name,
           description: this.project_description,
@@ -97,11 +101,13 @@ export default {
         CVSProjectService.create_project(project)
             .catch(error => {
               console.error(error);
+              Notification.emit_standard_error_message();
+              this.loading = false;
             })
             .then(project => {
               this.reset_form();
               this.$emit('project-created', project);
-              this.emit_close_dialog();
+              this.close();
             });
       }
     },

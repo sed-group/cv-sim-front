@@ -5,6 +5,7 @@
       <v-dialog
           v-model="dialog"
           max-width="290"
+          :persistent="persistent"
           @click:outside="reject"
       >
         <v-card>
@@ -13,13 +14,14 @@
           <v-card-actions>
             <v-spacer></v-spacer>
             <v-btn
+                :color="btn_reject_clr"
                 text
                 @click="reject"
             >
               {{ btn_reject }}
             </v-btn>
             <v-btn
-                color="red"
+                :color="btn_confirm_clr"
                 text
                 @click="confirm"
             >
@@ -37,22 +39,47 @@
 export default {
   name: 'ConfirmDialog',
 
-  props: [
-    'dialog',
-    'title',
-    'message',
-    'btn_confirm',
-    'btn_reject',
-  ],
-
-  methods: {
-    reject() {
-      this.$emit('reject');
+  props: {
+    title: String,
+    message: String,
+    btn_confirm: String,
+    btn_confirm_clr: {
+      default: 'primary',
+      type: String,
     },
-    confirm() {
-      this.$emit('confirm');
+    btn_reject: String,
+    btn_reject_clr: {
+      default: undefined,
+      type: String,
+    },
+    persistent: {
+      default: true,
+      type: Boolean,
     },
   },
+
+  data: () => ({
+    dialog: false,
+    answer: null,
+  }),
+
+  methods: {
+    open() {
+      this.dialog = true;
+      return new Promise(answer => {
+        this.answer = answer;
+      });
+    },
+    reject() {
+      this.answer('reject');
+      this.dialog = false;
+    },
+    confirm() {
+      this.answer('confirm');
+      this.dialog = false;
+    },
+  },
+
 };
 </script>
 

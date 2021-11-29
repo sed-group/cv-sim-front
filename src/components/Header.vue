@@ -6,8 +6,9 @@
     </div>
 
     <router-link :to="{ name: 'Home' }" id="cv-s-logo">
-      <v-img src="../assets/logo.png" alt="CV-S logo" width="100"></v-img>
+      <v-img src="../assets/logo-small.svg" alt="CV Simulator logo" height="90"></v-img>
     </router-link>
+
 
     <div class="nav-bar-item">
       <router-link :to="{ name: 'Contact' }">Contact</router-link>

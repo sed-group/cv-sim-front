@@ -1,7 +1,8 @@
 import axios from 'axios';
-import store from './store'
+import store from './store';
+import router from './router';
 
-import Notification from './models/utils/Notification'
+import Notification from './models/utils/Notification';
 import AuthService from './services/auth.service';
 
 
@@ -11,7 +12,7 @@ const httpClient = () => {
         baseURL: 'http://localhost:8000/api/',
         method: 'get',
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
         },
     };
 
@@ -21,16 +22,19 @@ const httpClient = () => {
         const token = localStorage.getItem('token');
         config.headers.Authorization = token ? `Bearer ${token}` : '';
         return config;
-    })
+    });
 
     instance.interceptors.response.use((response) => {
         return response;
-    }, (err) => {
-        if (err.response.status === 401) {
-            AuthService.logout();
-            return err;
-        } else {
-            console.error(err.stack);
+    }, err => {
+        if (!!err.response) {
+            if (err.response.status === 401) {
+                AuthService.logout();
+                router.push({name: 'Home'});
+                return err;
+            } else {
+                console.error(err.stack);
+            }
         }
 
         // Create a notification. Try to get response detail message.
@@ -40,8 +44,7 @@ const httpClient = () => {
                 message = err.response.data.detail;
             }
         } finally {
-            const notification = new Notification('error', message);
-            store.dispatch('addNotification', notification);
+            new Notification('error', message).push();
         }
 
         return err;

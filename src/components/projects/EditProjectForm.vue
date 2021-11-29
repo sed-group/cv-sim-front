@@ -6,7 +6,7 @@
         max-width="290"
         persistent
     >
-      <v-card>
+      <v-card :loading="loading" :disabled="loading">
         <v-card-title class="text-h5">
           Edit project
         </v-card-title>
@@ -24,6 +24,7 @@
                 :rules="project_name_rules"
                 :counter="255"
                 required
+                clearable
             ></v-text-field>
             <v-textarea
                 label="Description (optional)"
@@ -37,7 +38,7 @@
           <v-btn
               color="red"
               text
-              @click="emit_close_dialog"
+              @click="close"
           >
             Close
           </v-btn>
@@ -59,6 +60,7 @@
 
 <script>
 import CVSProjectService from '@/services/cvs-project.service';
+import Notification from '@/models/utils/Notification';
 
 export default {
   name: 'EditProjectForm',
@@ -69,28 +71,31 @@ export default {
   ],
 
   data: () => ({
+    loading: true,
     valid: false,
-
     project_name_rules: [
       v => !!v || 'A name is required',
-      v => v.length <= 255 || 'Too long',
+      v => (v && v.length <= 255) || 'Too long',
     ],
   }),
 
   methods: {
-    emit_close_dialog() {
+    close() {
       this.$emit('close-dialog');
+      this.loading = false;
     },
 
     submit: async function () {
       if (this.$refs.form.validate()) {
+        this.loading = true;
         CVSProjectService.edit_project(this.project)
             .catch(error => {
               console.error(error);
+              Notification.emit_standard_error_message();
+              this.loading = false;
             })
             .then(project => {
-              // this.$emit('project-edited', project);
-              this.emit_close_dialog();
+              this.close();
             });
       }
     },

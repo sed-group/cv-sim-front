@@ -1,7 +1,6 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
 
-import {IndividualModule} from './individual.module';
 import {ProjectModule} from './project.module';
 import {UserModule} from './user.module';
 
@@ -74,7 +73,6 @@ const store = new Vuex.Store({
     modules: {
         Project: ProjectModule,
         User: UserModule,
-        Individual: IndividualModule,
     },
 });
 

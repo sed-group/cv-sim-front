@@ -4,33 +4,11 @@ import store from '@/store/index';
 
 import Home from '@/views/Home';
 import WorkbenchView from '@/views/WorkbenchView';
-import Help from '@/views/Help';
-import About from '@/views/About';
-import Contact from '@/views/Contact';
 import Dashboard from '@/views/Dashboard';
-import Login from '@/views/Login';
 
 Vue.use(VueRouter);
 
 const routes = [
-    {
-        name: 'LogIn',
-        path: '/login',
-        meta: {
-            requiresAuth: false,
-            title: 'Log in',
-        },
-        component: Login,
-    },
-    {
-        name: 'SignUp',
-        path: '/signup',
-        meta: {
-            requiresAuth: false,
-            title: 'Sign up',
-        },
-        component: Login,
-    },
     {
         name: 'Home',
         path: '/',
@@ -54,33 +32,6 @@ const routes = [
             requiresAuth: true,
         },
         component: WorkbenchView,
-    },
-    {
-        name: 'Help',
-        path: '/help',
-        meta: {
-            requiresAuth: false,
-            title: 'Help',
-        },
-        component: Help,
-    },
-    {
-        name: 'About',
-        path: '/about',
-        meta: {
-            requiresAuth: false,
-            title: 'About',
-        },
-        component: About,
-    },
-    {
-        name: 'Contact',
-        path: '/contact',
-        meta: {
-            requiresAuth: false,
-            title: 'Contact',
-        },
-        component: Contact,
     },
 ];
 
@@ -122,7 +73,7 @@ router.beforeEach((to, from, next) => {
     if (requires_auth) {
         if (!is_logged_in) {
             sessionStorage.setItem('redirectPath', to.path);
-            next({name: 'LogIn'});
+            next({name: 'Home'});
         } else {
             next();
         }

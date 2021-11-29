@@ -1,9 +1,7 @@
 <template>
   <div class="dashboard">
 
-    <SystemBar
-        :user="user"
-    ></SystemBar>
+    <SystemBar :user="user"></SystemBar>
 
     <v-navigation-drawer
         app
@@ -28,9 +26,9 @@
 
           <v-list-item link>
             <v-list-item-icon>
-              <v-icon>mdi-alert-circle-outline</v-icon>
+              <v-icon>mdi-help-circle-outline</v-icon>
             </v-list-item-icon>
-            <v-list-item-title>Issues</v-list-item-title>
+            <v-list-item-title>Tutorials</v-list-item-title>
           </v-list-item>
 
           <v-list-item link>
@@ -48,9 +46,8 @@
     <ProjectsView v-if="sidebar_nav_selection === 0"></ProjectsView>
 
     <h1 v-if="sidebar_nav_selection === 1" class="ma-5">Templates</h1>
-    <h1 v-if="sidebar_nav_selection === 2" class="ma-5">Issues</h1>
+    <h1 v-if="sidebar_nav_selection === 2" class="ma-5">Tutorials</h1>
     <h1 v-if="sidebar_nav_selection === 3" class="ma-5">Settings</h1>
-    <About v-if="this.$route.name === 'About'"></About>
 
   </div>
 </template>
@@ -64,13 +61,11 @@ import SystemBar from '@/components/SystemBar';
 import UserService from '@/services/user.service';
 import store from '@/store';
 import User from '@/models/User';
-import About from '@/views/About';
 
 export default {
   name: 'Dashboard',
 
   components: {
-    About,
     ProjectsView,
     SystemBar,
   },

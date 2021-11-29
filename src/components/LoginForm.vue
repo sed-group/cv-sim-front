@@ -16,17 +16,25 @@
     >
       <v-text-field
           required
-          label="E-mail"
-          type="email"
+          label="Username"
+          type="text"
           v-model="email"
+          :rules="rules.username"
       ></v-text-field>
+      <!--<v-text-field-->
+      <!--    required-->
+      <!--    label="E-mail"-->
+      <!--    type="email"-->
+      <!--    v-model="email"-->
+      <!--    :rules="rules.email"-->
+      <!--</v-text-field>-->
       <v-text-field
           required
           label="Password"
           type="password"
           :append-icon="show_password ? 'mdi-eye' : 'mdi-eye-off'"
           :type="show_password ? 'text' : 'password'"
-          :rules="password_rules"
+          :rules="rules.password"
           @click:append="show_password = !show_password"
           v-model="password"
       ></v-text-field>
@@ -45,19 +53,29 @@
 import AuthService from '../services/auth.service';
 
 export default {
-  name: "LoginForm",
+  name: 'LoginForm',
 
-  props: ['show_close_btn'],
+  props: {
+    show_close_btn: {
+      type: Boolean,
+      default: true,
+    },
+  },
 
   data: () => ({
     show_password: false,
-    email_rules: [
-      v => !!v || 'Please enter an e-mail',
-      v => validate_email(v) || 'Must be a valid e-mail',
-    ],
-    password_rules: [
-      v => !!v || 'Password is required',
-    ],
+    rules: {
+      username: [
+        v => !!v || 'Please enter a username',
+      ],
+      email: [
+        v => !!v || 'Please enter an e-mail',
+        v => validate_email(v) || 'Must be a valid e-mail',
+      ],
+      password: [
+        v => !!v || 'Password is required',
+      ],
+    },
 
     email: '',
     password: '',
@@ -81,14 +99,14 @@ export default {
               }
             })
             .catch(error => {
-              console.log(error)
-              console.log('No soup for you')
+              console.log(error);
+              console.log('No soup for you');
               /*handle errors*/
             });
       }
     },
   },
-}
+};
 
 function validate_email(email) {
   const re = /^(([^<>()[\]\.,;:\s@\"]+(\.[^<>()[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i;

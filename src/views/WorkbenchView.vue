@@ -1,44 +1,77 @@
 <template>
+  <div class="workbench">
 
-  <div class="working-view">
-
-<!--    <SystemBar :user="user"></SystemBar>-->
-
-    <v-app-bar
-        app
-        clipped-left
-        clipped-right
-    >
-      <WorkbenchMenubar :menu_items="menu_items"></WorkbenchMenubar>
+    <v-app-bar app clipped-left clipped-right>
+      <WorkbenchMenubar
+          :project="project"
+          :user="user"
+          :checkbox_details="show_details"
+          @toggle-details="show_details = !show_details"
+          @manage-value-drivers="item_manager_tab = 'value-drivers'; item_manager = true"
+          @manage-subprocesses="item_manager_tab = 'subprocesses'; item_manager = true"
+      ></WorkbenchMenubar>
     </v-app-bar>
 
-    <v-navigation-drawer app clipped permanent id="project-element-container">
-      <WorkbenchSidebar></WorkbenchSidebar>
+    <v-navigation-drawer
+        app
+        left
+        clipped
+        permanent
+        color="#eeeeee"
+        width="326"
+    >
+      <WorkbenchSidebar
+          :project="project"
+          @vcs-working-view="active_work_area='vcs'"
+          @generic-working-view="active_work_area='generic'"
+          @vcs-selected="on_vcs_selected"
+          :vcs_list="vcs_list"
+      ></WorkbenchSidebar>
     </v-navigation-drawer>
 
-    <v-navigation-drawer app right clipped permanent id="details-box">
-      <DetailsBox></DetailsBox>
+    <!-- CONTENT -->
+    <!--    <div style="min-height: calc(100vh - 64px)">-->
+    <div>
+      <WorkArea
+          :active_work_area="active_work_area"
+          :selected_vcs="selected_vcs"
+      ></WorkArea>
+    </div>
+
+    <v-navigation-drawer absolute right clipped color="#eeeeee" v-model="show_details">
+      <DetailsBox @close="show_details = false"></DetailsBox>
     </v-navigation-drawer>
 
-    <Footer></Footer>
+    <ItemManager
+        :show="item_manager"
+        :selected_tab="item_manager_tab"
+        @close="item_manager = false"
+    ></ItemManager>
 
   </div>
-
 </template>
 
 
 <script>
 
-import WorkbenchMenubar from "@/components/workbench/WorkbenchMenubar";
-import DetailsBox from "@/components/DetailsBox";
-import WorkArea from "@/components/WorkArea";
-import WorkbenchSidebar from "@/components/workbench/WorkbenchSidebar";
-import SystemBar from "@/components/SystemBar";
+import WorkbenchMenubar from '@/components/workbench/WorkbenchMenubar';
+import DetailsBox from '@/components/DetailsBox';
+import WorkArea from '@/components/workbench/WorkArea';
+import WorkbenchSidebar from '@/components/workbench/WorkbenchSidebar';
+import SystemBar from '@/components/SystemBar';
+import CVSProjectService from '@/services/cvs-project.service';
+import CVSVCSService from '@/services/cvs-vcs.service';
+import VCSValueDrivers from '@/components/workbench/vcs/VCSValueDrivers';
+import VCSSubprocesses from '@/components/workbench/vcs/VCSSubprocesses';
+import ItemManager from '@/components/workbench/vcs/ItemManager';
 
 export default {
   name: 'WorkbenchView',
 
   components: {
+    ItemManager,
+    VCSSubprocesses,
+    VCSValueDrivers,
     WorkbenchMenubar,
     DetailsBox,
     WorkArea,
@@ -47,114 +80,63 @@ export default {
   },
 
   data: () => ({
+    user: null,
+    project: null,
+    details: false,
+    active_work_area: 'vcs',
 
-    user: {
-      username: 'admin',
+    item_manager: false,
+    item_manager_tab: 'value-drivers',
+
+    show_details: false,
+
+    selected_vcs: {},
+    vcs_list: [],
+  }),
+
+  methods: {
+    async get_project() {
+      CVSProjectService.get_project(this.$route.params.project_id).then(data => {
+        if (!!data) {
+          this.project = data;
+          this.user = data.owner;
+        }
+      });
     },
 
-    // hard coded items of the menubar
-    menu_items: [
-      {
-        title: 'File',
-        type: 'menu',
-        items: [
-          {title: 'File 1'},
-          {title: 'File 2'},
-          {title: 'File 3'},
-          {title: '...'},
-        ],
-      },
+    on_vcs_selected(id) {
+      this.selected_vcs = this.vcs_list.find(obj => obj.id === id);
+    },
 
-      {
-        title: 'Edit',
-        type: 'menu',
-        items: [
-          {title: 'Edit 1'},
-          {title: 'Edit 2'},
-          {title: 'Edit 3'},
-          {title: '...'},
-        ],
-      },
+    get_all_vcs() {
+      const project_id = this.$route.params.project_id;
+      CVSVCSService.get_all_vcss(project_id).then(response => {
+        if (!!response) {
+          const vcss = response.chunk;
+          if (!!vcss) {
+            this.vcs_list = [];
+            for (let i = 0; i < vcss.length; i++) {
+              this.vcs_list.push(vcss[i]);
+            }
+            this.vcs_list.sort((a, b) => (a.id > b.id) ? 1 : -1); // sorting based on ascending id
+          }
+        }
+      });
+    },
 
-      {
-        title: 'View',
-        type: 'menu',
-        items: [
-          {title: 'View 1'},
-          {title: 'View 2'},
-          {title: 'View 3'},
-          {title: '...'},
-        ],
-      },
+  },
 
-      {
-        title: 'Allocate costs',
-        type: 'menu',
-        items: [
-          {title: 'Allocate costs 1'},
-          {title: 'Allocate costs 2'},
-          {title: 'Allocate costs 3'},
-          {title: '...'},
-        ],
-      },
+  mounted() {
+    this.get_project();
+    this.get_all_vcs();
+  },
 
-      {
-        title: 'Run simulation',
-        type: 'menu',
-        items: [
-          {title: 'Run simulation 1'},
-          {title: 'Run simulation 2'},
-          {title: 'Run simulation 3'},
-          {title: '...'},
-        ],
-      },
-
-      {
-        title: 'Inspect results',
-        type: 'new-tab',
-      },
-
-      {
-        title: 'Simulation',
-        type: 'menu',
-        items: [
-          {title: 'Allocate costs'},
-          {title: 'Run simulation'},
-          {title: 'Inspect results'},
-        ],
-      },
-
-      {
-        title: 'Help',
-        type: 'menu',
-        items: [
-          {title: 'Help 1'},
-          {title: 'Help 2'},
-          {title: 'Help 3'},
-          {title: '...'},
-        ],
-      },
-
-    ],
-
-  }),
-}
+};
 
 </script>
 
 
 <style scoped>
 
-.working-view {
-  width: 200vw;
-  height: 200vh;
-  background: url('http://i.stack.imgur.com/GySvQ.png');
-  background-size: 10px;
-}
-
-#details-box,
-#project-element-container {
-  background-color: #eeeeee;
-}
-
 </style>
+

@@ -21,6 +21,11 @@
       </v-btn-toggle>
     </v-toolbar>
 
+    <v-btn @click="notify_all">all</v-btn>
+    <v-btn @click="notify_success">success</v-btn>
+    <v-btn @click="notify_info">info</v-btn>
+    <v-btn @click="notify_warning">warning</v-btn>
+    <v-btn @click="notify_error">error</v-btn>
 
     <span class="ml-5" v-if="!!projects">Showing {{ projects.length }} of {{ projects.length }} <span
         v-if="projects.length === 1">project</span><span v-else>projects</span>.</span>
@@ -35,7 +40,8 @@
               :z-index="1"
               @project-created="on_project_created"
               @project-edit="on_project_edit"
-              @project-delete="on_project_delete"
+              @project-delete="delete_project"
+              @open-project-form="show_new_project_form = true"
           ></ProjectCards>
         </v-expand-transition>
       </div>
@@ -46,33 +52,39 @@
               :projects="projects"
               :z-index="2"
               @project-edit="on_project_edit"
-              @project-delete="on_project_delete"
+              @project-delete="delete_project"
           ></ProjectsList>
         </v-expand-transition>
       </div>
     </div>
 
 
-    <v-btn
-        style="position: fixed; bottom: 2em; right: 2em"
-        fab
-        x-large
-        color="primary"
-        @click.stop="show_new_project_form = true"
-        elevation="10"
-    >
-      <v-icon>mdi-plus</v-icon>
-    </v-btn>
+    <v-tooltip left v-if="project_layout_selection === 1">
+      <template v-slot:activator="{ on, attrs }">
+        <v-btn
+            style="position: fixed; bottom: 2em; right: 2em"
+            fab
+            x-large
+            color="primary"
+            @click.stop="show_new_project_form = true"
+            elevation="10"
+            v-bind="attrs"
+            v-on="on"
+        >
+          <v-icon>mdi-plus</v-icon>
+        </v-btn>
+      </template>
+      <span>Create new project</span>
+    </v-tooltip>
 
 
     <ConfirmDialog
-        :dialog="confirm_dialog"
-        :title="confirm_title"
-        :message="confirm_message"
-        :btn_confirm="confirm_btn_confirm"
-        :btn_reject="confirm_btn_reject"
-        @confirm="on_confirm"
-        @reject="on_reject"
+        ref="confirm_dialog"
+        title="Delete project?"
+        message="Are you sure you want to delete this project?"
+        btn_confirm="Delete"
+        btn_confirm_clr="error"
+        btn_reject="Cancel"
     ></ConfirmDialog>
 
 
@@ -94,12 +106,14 @@
 
 
 <script>
+import Notification from '@/models/utils/Notification';
+
+import CVSProjectService from '@/services/cvs-project.service';
+
 import ProjectCards from '@/components/projects/ProjectsCards';
 import ProjectsList from '@/components/projects/ProjectsList';
 import ConfirmDialog from '@/components/utils/ConfirmDialog';
 import NewProjectForm from '@/components/projects/NewProjectForm';
-
-import CVSProjectService from '@/services/cvs-project.service';
 import EditProjectForm from '@/components/projects/EditProjectForm';
 
 export default {
@@ -122,36 +136,10 @@ export default {
     show_new_project_form: false,
     show_edit_project_form: false,
 
-    confirm_dialog: false,
-    confirm_title: '',
-    confirm_message: '',
-    confirm_btn_confirm: '',
-    confirm_btn_reject: '',
-
-    project_to_delete: undefined,
     project_to_edit: {},
   }),
 
   methods: {
-    on_project_delete(project) {
-      this.project_to_delete = project;
-      this.confirm_title = 'Delete project?';
-      this.confirm_message = 'Are you sure you want to delete this project?';
-      this.confirm_btn_confirm = 'Delete';
-      this.confirm_btn_reject = 'Cancel';
-      this.confirm_dialog = true;
-    },
-
-    on_confirm() {
-      this.delete_project();
-      this.confirm_dialog = false;
-    },
-
-    on_reject() {
-      this.project_to_delete = undefined;
-      this.confirm_dialog = false;
-    },
-
     on_project_created(project) {
       this.projects.push(project);
     },
@@ -170,37 +158,62 @@ export default {
       localStorage.setItem('project_layout_selection', this.project_layout_selection.toString());
     },
 
-    delete_project() {
-      if (!!this.project_to_delete) {
-        const id = this.project_to_delete.id;
-        CVSProjectService.delete_project(id)
-            .catch(error => {
-              console.error(error);
-            })
-            .then(data => {
-              if (data === true) {
-                $('.project-with-id-' + id).fadeOut(500, () => {
-                  this.$emit('project-deleted', id);
-                });
-              }
-            });
-      } else {
-        console.error('Something went wrong with the deletetion of the project.');
-      }
-      this.project_to_delete = undefined;
+    delete_project(project) {
+      const id = project.id;
+      this.$refs.confirm_dialog.open().then(result => {
+        if (result === 'confirm') {
+          CVSProjectService.delete_project(id)
+              .catch(error => {
+                console.error(error);
+              })
+              .then(data => {
+                if (data === true) {
+                  $('.project-with-id-' + id).fadeOut(500);
+                }
+              });
+        }
+      });
     },
 
     update_projects() {
-      CVSProjectService.get_projects(0, 100).then((r) => {
-        const projects = r.chunk;
-        if (!!projects) {
-          this.projects = [];
-          for (let i = 0; i < projects.length; i++) {
-            this.projects.push(projects[i]);
-          }
-          this.projects.sort((a, b) => (a.id > b.id) ? 1 : -1); // sorting based on ascending id
-        }
-      });
+      if (this.$store.state.User.loggedIn) {
+        CVSProjectService.get_all_projects()
+            .catch(error => {
+              console.log(error);
+              console.error(error);
+            })
+            .then(response => {
+              if (!!response) {
+                const projects = response.chunk;
+                if (!!projects) {
+                  this.projects = [];
+                  for (let i = 0; i < projects.length; i++) {
+                    this.projects.push(projects[i]);
+                  }
+                  this.projects.sort((a, b) => (a.id > b.id) ? 1 : -1); // sorting based on ascending id
+                }
+              }
+            });
+      }
+    },
+
+    notify_all() {
+      this.notify_success();
+      this.notify_info();
+      this.notify_warning();
+      this.notify_error();
+    },
+    notify_success() {
+      new Notification('success', 'This is a success notification. This is a success notification. This is a success notification. This is a success notification. This is a success notification.').push();
+    },
+    notify_info() {
+      new Notification('info', 'This is an info notification.sad asdsadasda sdasdasdasda sdasdas').push();
+    },
+    notify_warning() {
+      new Notification('warning', 'This is a warning notification.').push();
+    },
+    notify_error() {
+      new Notification('error', 'This is an error notification.').push();
     },
 
   },

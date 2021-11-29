@@ -39,7 +39,6 @@
                   <v-list-item-title>Duplicate</v-list-item-title>
                   <v-list-item-icon>
                     <v-icon>mdi-content-duplicate</v-icon>
-
                   </v-list-item-icon>
                 </v-list-item>
 
@@ -62,14 +61,9 @@
           </v-bottom-navigation>
         </v-expand-transition>
 
-        <router-link :to="{ name: 'Workbench', params: { project_id: project.id } }">
-          <v-img src="https://brokenchalk.org/wp-content/uploads/2021/08/Project-2.png"
-                 cover
-                 style="height: 60%"
-                 link
-                 class="rounded-t"
-          ></v-img>
-        </router-link>
+        <div style="height: 60%; display: grid; place-items: center; background-color: #e5e5e5">
+          <v-icon size="40">mdi-hammer-wrench</v-icon>
+        </div>
 
         <v-card-title class="one-line pt-2" style="font-size: 1em">
           <v-icon left>mdi-folder</v-icon>
@@ -87,6 +81,22 @@
 
       </v-card>
     </v-hover>
+
+
+    <!-- Wireframe "create new project" card -->
+    <v-card
+        class="ghost-card"
+        width="190"
+        height="190"
+        flat
+        link
+        @click="$emit('open-project-form')"
+    >
+      <div class="content">
+        <v-icon color="#c5c5c5" size="50">mdi-plus</v-icon>
+        <span>Create new project</span>
+      </div>
+    </v-card>
 
   </div>
 </template>
@@ -146,5 +156,27 @@ export default {
   white-space: nowrap;
 }
 
+
+/* GHOST CARD */
+.ghost-card {
+  --clr: #c5c5c5;
+  --border-size: 2px;
+
+  display: grid;
+  place-items: center;
+
+  border: var(--border-size) dashed var(--clr);
+}
+
+.ghost-card .content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap: 1em;
+
+  color: var(--clr);
+  font-size: 1.15em;
+}
 
 </style>

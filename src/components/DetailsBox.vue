@@ -2,7 +2,11 @@
   <div class="details-box">
 
     <v-toolbar>
-      <v-toolbar-title>Properties</v-toolbar-title>
+      <v-toolbar-title>Details</v-toolbar-title>
+      <v-spacer></v-spacer>
+      <v-btn icon @click="close">
+        <v-icon>mdi-close</v-icon>
+      </v-btn>
     </v-toolbar>
 
     <div style="padding: 1em">
@@ -30,7 +34,7 @@
           clearable
       ></v-text-field>
 
-       <v-textarea
+      <v-textarea
           label="Description"
           type="text"
           clearable
@@ -44,15 +48,25 @@
 
 <script>
 
+import CVSProjectService from '@/services/cvs-project.service';
+
 export default {
-  name: "DetailsBox",
-}
+  name: 'DetailsBox',
+
+  data: () => ({}),
+
+  methods: {
+    close() {
+      this.$emit('close');
+    },
+  },
+
+};
 
 </script>
 
 
 <style scoped>
-
 
 h4 {
   display: flex;
