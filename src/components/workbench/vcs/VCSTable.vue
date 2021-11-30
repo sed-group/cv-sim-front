@@ -100,8 +100,8 @@
       >
         <tr>
           <!-- PROCESS -->
-          <td v-if="!!row.iso_process && edit === true">
-
+          <td :rowspan="row.stakeholder_needs.length" v-if="!!row.iso_process && edit === true">
+            <v-text-field :value="row.iso_process.name" @click="show_process_select = true"></v-text-field>
           </td>
           <td :rowspan="row.stakeholder_needs.length" v-if="!!row.iso_process">{{ row.iso_process.name }}</td>
           <td :rowspan="row.stakeholder_needs.length" v-else-if="!!row.subprocess">
@@ -180,9 +180,9 @@
     <VCSProcessSelect
         :show="show_process_select"
         @close="on_close_process_select"
-        :custom_processes="custom_processes"
         :show_custom_processes="true"
-        @selected-process="on_process_selected"
+        @iso-process-selected="on_iso_process_selected"
+        @subprocess-selected="on_subprocess_selected"
     ></VCSProcessSelect>
 
     <v-dialog v-model="open_dialog" width="500">
@@ -216,8 +216,10 @@
 
 
 <script>
-import VCSProcessSelect from '@/components/workbench/vcs/iso_processes/VCSProcessSelect';
+import VCSProcessSelect from '@/components/workbench/vcs/VCSProcessSelect';
 import LoadingAnimaiton from '@/components/utils/LoadingAnimaiton';
+import Notification from '@/models/utils/Notification';
+import ISOProcesses from '@/models/ISOProcesses';
 
 export default {
   name: 'VCSTable',
@@ -239,7 +241,6 @@ export default {
 
       progress: 0,
       open_dialog: false,
-      custom_processes: [],
 
       loading: false,
       edit: false,
@@ -250,7 +251,12 @@ export default {
     on_close_process_select() {
       this.show_process_select = false;
     },
-    on_process_selected() {
+    on_iso_process_selected(id) {
+      const iso_process = ISOProcesses.find(obj => obj.id === id);
+      new Notification('info', iso_process).push();
+    },
+    on_subprocess_selected(subprocess) {
+      new Notification('info', subprocess).push();
     },
   },
 

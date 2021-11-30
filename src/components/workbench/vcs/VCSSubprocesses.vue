@@ -139,7 +139,7 @@
                       @close="on_close_process_select"
                       :custom_processes="custom_processes"
                       :show_custom_processes="false"
-                      @selected-process="on_process_selected"></VCSProcessSelect>
+                      @iso-process-selected="on_iso_process_selected"></VCSProcessSelect>
 
     <ConfirmDialog
         ref="confirm_dialog"
@@ -156,10 +156,12 @@
 
 
 <script>
-import VCSProcessSelect from '@/components/workbench/vcs/iso_processes/VCSProcessSelect';
+import VCSProcessSelect from '@/components/workbench/vcs/VCSProcessSelect';
 import VCSSubprocessesService from '@/services/vcs-subprocess.service';
 import LoadingAnimaiton from '@/components/utils/LoadingAnimaiton';
 import ConfirmDialog from '@/components/utils/ConfirmDialog';
+
+import ISOProcesses from '@/models/ISOProcesses';
 
 export default {
   name: 'VCSSubprocesses',
@@ -200,40 +202,7 @@ export default {
       // Process select
       show_process_select: false,
       custom_processes: [],
-      iso_processes: [
-        // AGREEMENT PROCESSES
-        {id: 1, name: 'Acquisition', group: 'Agreement Processes'},
-        {id: 2, name: 'Supply', group: 'Agreement Processes'},
-
-        // ORGANIZATIONAL PROJECT-ENABLING PROCESSES
-        {id: 3, name: 'Life-cycle model management', group: 'Organizational project-enabling processes'},
-        {id: 4, name: 'Infrastructure management', group: 'Organizational project-enabling processes'},
-        {id: 5, name: 'Project portfolio management', group: 'Organizational project-enabling processes'},
-        {id: 6, name: 'Human resource management', group: 'Organizational project-enabling processes'},
-        {id: 7, name: 'Quality management', group: 'Organizational project-enabling processes'},
-
-        // PROJECT PROCESSES
-        {id: 8, name: 'Project planning', group: 'Project processes'},
-        {id: 9, name: 'Project assessment and control', group: 'Project processes'},
-        {id: 10, name: 'Decision management', group: 'Project processes'},
-        {id: 11, name: 'Risk management', group: 'Project processes'},
-        {id: 12, name: 'Configuration management', group: 'Project processes'},
-        {id: 13, name: 'Information management', group: 'Project processes'},
-        {id: 14, name: 'Measurement', group: 'Project processes'},
-
-        // TECHNICAL PROCESSES
-        {id: 15, name: 'Stakeholder requirements definition', group: 'Technical processes'},
-        {id: 16, name: 'Requirements analysis', group: 'Technical processes'},
-        {id: 17, name: 'Architectual design', group: 'Technical processes'},
-        {id: 18, name: 'Implementation', group: 'Technical processes'},
-        {id: 19, name: 'Integration', group: 'Technical processes'},
-        {id: 20, name: 'Verification', group: 'Technical processes'},
-        {id: 21, name: 'Transition', group: 'Technical processes'},
-        {id: 22, name: 'Validation', group: 'Technical processes'},
-        {id: 23, name: 'Operation', group: 'Technical processes'},
-        {id: 24, name: 'Maintenance', group: 'Technical processes'},
-        {id: 25, name: 'Disposal', group: 'Technical processes'},
-      ],
+      iso_processes: ISOProcesses,
 
       loading_list_items: [],
 
@@ -323,7 +292,7 @@ export default {
       this.show_process_select = false;
     },
 
-    on_process_selected(id) {
+    on_iso_process_selected(id) {
       const selected_process = this.iso_processes.find(obj => {
         return obj.id === id;
       });
