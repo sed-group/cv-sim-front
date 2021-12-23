@@ -7,10 +7,10 @@
     <v-card-subtitle>Please select or create a VCS in the menu to the left</v-card-subtitle>
   </v-card>
 
-  <div v-else class="py-5 px-3" style="position: relative">
+  <div v-else class="pb-5 px-3" style="position: relative">
 
     <!-- VCS meta data -->
-    <div class="vcs-table-head">
+    <div class="vcs-table-head pt-5 pb-2">
       <div class="ma-1 text-h4">{{ vcs.name }}</div>
       Years of validity:
       <v-chip style="font-size: 1.15em" outlined>{{ vcs.year_from }}</v-chip>
@@ -22,7 +22,7 @@
       <v-divider></v-divider>
     </div>
 
-    <VCSTable :vcs_table="vcs_table"></VCSTable>
+    <VCSTable :vcs_id="vcs.id" :vcs_table="vcs_table"></VCSTable>
 
   </div>
 </template>
@@ -78,6 +78,13 @@ export default {
 
 
 <style scoped>
+
+.vcs-table-head {
+  position: sticky;
+  top: 64px;
+  z-index: 1;
+  background-color: white;
+}
 
 .vcs-work-area {
   padding: 1em;

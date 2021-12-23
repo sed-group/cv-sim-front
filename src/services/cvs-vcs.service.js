@@ -54,6 +54,14 @@ class CVSVCSService {
         return response.data;
     }
 
+    async create_vcs_table(project_id, vcs_id, table_rows) {
+        const response = await httpClient.post(
+            API_EXTENSION + project_id + '/vcs/' + vcs_id + '/create/table/',
+            {'table_rows': table_rows},
+        );
+        return response.data;
+    }
+
 }
 
 export default new CVSVCSService();

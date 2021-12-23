@@ -192,9 +192,7 @@
 
 <script>
 import VCSSubprocessesService from '@/services/vcs-subprocess.service';
-
 import Notification from '@/models/utils/Notification';
-
 import LoadingAnimaiton from '@/components/utils/LoadingAnimaiton';
 
 export default {

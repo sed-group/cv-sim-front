@@ -16,7 +16,10 @@ class Notification {
     }
 
     static emit_standard_error_message() {
-        new Notification('error', 'Something went wrong. Please refresh the page and try again.').push();
+        new Notification(
+            'error',
+            'Something went wrong. Please refresh the page and try again.',
+        ).push();
     }
 
 }
