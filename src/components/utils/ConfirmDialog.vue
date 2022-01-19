@@ -4,7 +4,7 @@
     <v-row justify="center">
       <v-dialog
           v-model="dialog"
-          max-width="290"
+          :max-width="width"
           :persistent="persistent"
           @click:outside="reject"
       >
@@ -55,6 +55,10 @@ export default {
     persistent: {
       default: true,
       type: Boolean,
+    },
+    width: {
+      default: 290,
+      type: Number,
     },
   },
 

@@ -1,21 +1,25 @@
 <template>
   <div class="value-creation-strategy pb-16 mb-16">
 
-    <v-list dense expand>
+    <div v-if="!!vcs_list === false" class="loading-anim-container">
+      <LoadingAnimaiton></LoadingAnimaiton>
+    </div>
+
+    <v-list v-else dense expand>
       <v-list-item-group v-model="list_selection">
-        <v-list-item
-            v-for="(vcs, index) in vcs_list"
-            @click="vcs_selected(vcs.id)"
-            :class="'vcs-with-id-' + vcs.id"
-        >
+        <v-list-item v-for="vcs in vcs_list"
+                     @click="vcs_selected(vcs.id)"
+                     :class="'vcs-with-id-' + vcs.id">
 
           <v-list-item-content>
-            <v-card :loading="loading_list_items[index]"
+            <v-card :loading="vcs.loading === true"
                     loader-height="30"
                     style="background-color: transparent"
                     flat>
               <v-list-item-title>{{ vcs.name }}</v-list-item-title>
-              <v-list-item-subtitle>{{ vcs.year_from }}-{{ vcs.year_to }} | {{ vcs.description }}</v-list-item-subtitle>
+              <v-list-item-subtitle>
+                {{ vcs.year_from }}-{{ vcs.year_to }} <span v-if="!!vcs.description">| {{ vcs.description }}</span>
+              </v-list-item-subtitle>
             </v-card>
           </v-list-item-content>
 
@@ -62,6 +66,7 @@
       </v-list-item-group>
     </v-list>
 
+    <!-- CREATE NEW BUTTON -->
     <v-tooltip top>
       <template v-slot:activator="{ on, attrs }">
         <v-btn
@@ -78,11 +83,13 @@
       <span>Create new VCS</span>
     </v-tooltip>
 
+
     <NewVCSForm
         :show="new_vcs_form"
         @close="new_vcs_form = false"
         @vcs-created="on_vcs_created"
     ></NewVCSForm>
+
 
     <EditVCSForm
         :show="edit_vcs_form"
@@ -90,6 +97,7 @@
         @close="edit_vcs_form = false"
         @vcs-edited="on_vcs_edited"
     ></EditVCSForm>
+
 
     <ConfirmDialog
         ref="confirm_dialog"
@@ -100,16 +108,20 @@
         btn_reject="Cancel"
     ></ConfirmDialog>
 
+
   </div>
 </template>
 
 
 <script>
-import NewVCSForm from '@/components/workbench/vcs/forms/NewVCSForm';
-import CVSVCSService from '@/services/cvs-vcs.service';
 import ConfirmDialog from '@/components/utils/ConfirmDialog';
 import EditVCSForm from '@/components/workbench/vcs/forms/EditVCSForm';
+import LoadingAnimaiton from '@/components/utils/LoadingAnimaiton';
+import NewVCSForm from '@/components/workbench/vcs/forms/NewVCSForm';
+
 import Notification from '@/models/utils/Notification';
+
+import CVSVCSService from '@/services/cvs-vcs.service';
 
 export default {
   name: 'VCSSidebarContent',
@@ -120,6 +132,7 @@ export default {
   ],
 
   components: {
+    LoadingAnimaiton,
     EditVCSForm,
     ConfirmDialog,
     NewVCSForm,
@@ -131,7 +144,6 @@ export default {
       new_vcs_form: false,
       edit_vcs_form: false,
       vcs_to_edit: {},
-      loading_list_items: [],
     };
   },
 
@@ -147,19 +159,19 @@ export default {
       this.$emit('vcs-selected', id);
     },
     duplicate_vcs(vcs) {
-      const index = this.vcs_list.findIndex(obj => obj.id === vcs.id);
-      this.loading_list_items[index] = true;
+      vcs.loading = true;
       const project_id = this.$route.params.project_id;
+      const duplicate = vcs.slice();
       CVSVCSService.create_vcs(project_id, vcs)
           .catch(error => {
             console.error(error);
             Notification.emit_standard_error_message();
-            this.loading_list_items.fill(false);
+            vcs.loading = false;
           })
           .then(vcs => {
-            this.loading_list_items.fill(false);
             this.vcs_list.push(vcs);
             new Notification('success', `VCS "${vcs.name}" duplicated.`).push();
+            vcs.loading = false;
           });
     },
     edit_vcs(vcs) {
@@ -167,38 +179,30 @@ export default {
       this.edit_vcs_form = true;
     },
     delete_vcs(id) {
-      const index = this.vcs_list.findIndex(obj => obj.id === id);
-      this.loading_list_items[index] = true;
+      const vcs = this.vcs_list.find(item => item.id === id);
+      vcs.loading = true;
       this.$refs.confirm_dialog.open().then(result => {
         if (result === 'confirm') {
           CVSVCSService.delete_vcs(this.project.id, id)
               .catch(error => {
+                vcs.loading = false;
                 console.error(error);
                 Notification.emit_standard_error_message();
-                this.loading_list_items[index] = true;
               })
               .then(data => {
-                this.loading_list_items[index] = true;
+                vcs.loading = false;
                 if (data === true) {
                   $('.vcs-with-id-' + id).fadeOut(500, () => {
-                    const i = this.vcs_list.findIndex(x => x.id === id);
-                    this.vcs_list.splice(i, 1);
+                    this.vcs_list = this.vcs_list.filter(item => item.id !== id);
                   });
                 }
               });
+        } else {
+          vcs.loading = false;
         }
       });
     },
   },
-
-  watch: {
-    vcs_list() {
-      if (!!this.value_drivers) {
-        this.loading_list_items = new Array(this.vcs_list.length).fill(false);
-      }
-    },
-  },
-
 };
 </script>
 
@@ -209,6 +213,13 @@ export default {
   position: fixed;
   right: 2em;
   bottom: 2em;
+}
+
+.loading-anim-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 </style>

@@ -3,7 +3,6 @@
     <v-row align="start">
       <v-col class="grow">
         {{ notification.message }}
-
       </v-col>
       <v-col class="shrink">
         <!-- just some extra space/padding -->
@@ -38,6 +37,14 @@ export default {
     close() {
       this.$emit('close', this.notification.id);
     },
+  },
+
+  created() {
+    if (this.notification.timeout > 0) {
+      setTimeout(() => {
+        this.close();
+      }, this.notification.timeout);
+    }
   },
 
 };

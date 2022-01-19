@@ -3,21 +3,26 @@
 
     <div style="position: relative">
 
-      <div v-if="!!value_drivers" class="overflow-y-auto px-5 pb-10" style="height: 500px">
+      <div v-if="loading_anim" class="overflow-y-auto px-5 pb-10"
+           style="height: 500px; display: grid; place-items: center">
+        <LoadingAnimaiton></LoadingAnimaiton>
+      </div>
+      <div v-else-if="!!value_drivers" class="overflow-y-auto px-5 pb-10" style="height: 500px">
         <v-list v-if="value_drivers.length > 0">
-          <template v-for="(value_driver, index) in value_drivers">
-            <v-menu absolute offset-y>
+          <template v-for="value_driver in value_drivers">
+            <v-menu absolute offset-y :key="value_driver.id">
               <template v-slot:activator="{ on, attrs }">
                 <v-list-item v-bind="attrs"
                              v-on="on"
                              :class="'value-driver-' + value_driver.id"
-                             :disabled="loading_list_items[index]"
+                             :disabled="value_driver.loading"
                 >
                   <v-list-item-content>
-                    <v-card :loading="loading_list_items[index]"
+                    <v-card :loading="value_driver.loading"
                             loader-height="30"
                             style="background-color: transparent"
-                            flat>
+                            flat
+                    >
                       <v-list-item-title>
                         {{ value_driver.name }}
                       </v-list-item-title>
@@ -45,9 +50,7 @@
         </v-list>
         <div v-else class="mt-5">You have not created any value drivers yet.</div>
       </div>
-      <div v-else class="overflow-y-auto px-5 pb-10" style="height: 500px; display: grid; place-items: center">
-        <LoadingAnimaiton></LoadingAnimaiton>
-      </div>
+
 
       <!-- CREATE NEW BUTTON -->
       <v-tooltip top>
@@ -125,7 +128,8 @@
     <ConfirmDialog
         ref="confirm_dialog"
         title="Delete value driver?"
-        message="Are you sure you want to delete this value driver?"
+        :message="'Are you sure you want to delete \'' + value_driver_to_delete + '\'?'"
+        :width="500"
         btn_confirm="Delete"
         btn_confirm_clr="error"
         btn_reject="Cancel"
@@ -152,7 +156,13 @@ export default {
   props: {
     value_drivers: {
       type: Array,
-      default: undefined,
+      default() {
+        return [];
+      },
+    },
+    loading_anim: {
+      type: Boolean,
+      default: true,
     },
   },
 
@@ -166,9 +176,9 @@ export default {
       form_value_driver_name: '',
       valid: false,
       loading: false,
-      loading_list_items: [],
       form_type: 'create',
       value_drivers_editing_id: null,
+      value_driver_to_delete: '',
     };
   },
 
@@ -181,21 +191,24 @@ export default {
     },
 
     delete_value_driver(id) {
+      const value_driver = this.value_drivers.find(item => item.id === id);
+      this.value_driver_to_delete = value_driver.name;
       this.$refs.confirm_dialog.open().then(result => {
         if (result === 'confirm') {
-          const index = this.value_drivers.findIndex(x => x.id === id);
-          this.loading_list_items[index] = true;
+          value_driver.loading = true;
           const project_id = this.$route.params.project_id;
           VCSValueDriversService.delete_one(project_id, id)
               .catch(error => {
-                this.loading_list_items[index] = false;
+                value_driver.loading = false;
                 console.error(error);
               })
               .then(response => {
-                this.loading_list_items[index] = false;
+                value_driver.loading = false;
                 if (response === true) {
                   $('.value-driver-' + id).fadeOut(500);
-                  $('.divider-for-value-driver-' + id).fadeOut(500);
+                  $('.divider-for-value-driver-' + id).fadeOut(500, () => {
+                    this.$emit('value-driver-deleted', id);
+                  });
                 }
               });
         }
@@ -247,14 +260,6 @@ export default {
       }
     },
 
-  },
-
-  watch: {
-    value_drivers() {
-      if (!!this.value_drivers) {
-        this.loading_list_items = new Array(this.value_drivers.length).fill(false);
-      }
-    },
   },
 
 };

@@ -71,7 +71,7 @@ export default {
   ],
 
   data: () => ({
-    loading: true,
+    loading: false,
     valid: false,
     project_name_rules: [
       v => !!v || 'A name is required',

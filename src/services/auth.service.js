@@ -1,8 +1,8 @@
-import httpClient from '../http-client'
-import store from './../store/index'
-import User from "@/models/User";
+import httpClient from '../http-client';
+import store from './../store/index';
+import User from '@/models/User';
 
-const API_EXTENSION = 'core/auth/'
+const API_EXTENSION = 'core/auth/';
 
 class AuthService {
     login(authData) {
@@ -27,6 +27,7 @@ class AuthService {
                     httpClient.get('core/users/me', bodyFormData, {headers: headers})
                         .then(response => {
                             store.dispatch('User/setUser', new User(response.data));
+                            store.dispatch('clearAllLogOut');
                         });
                 }
             });

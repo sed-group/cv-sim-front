@@ -11,6 +11,11 @@ const store = new Vuex.Store({
         loading: false,
         loadingMessage: null,
         notifications: [],
+
+        user: null,
+        project: null,
+        value_drivers: [],
+        subprocesses: [],
     },
 
     mutations: {
@@ -32,10 +37,10 @@ const store = new Vuex.Store({
             state.notifications.push(notification);
         },
 
-        REMOVE_NOTIFICATION(state, notificationID) {
+        REMOVE_NOTIFICATION(state, notification_id) {
             for (let i = 0; i < state.notifications.length; i++) {
                 const notification = state.notifications[i];
-                if (notification.id === notificationID) {
+                if (notification.id === notification_id) {
                     state.notifications.splice(i, 1);
                     break;
                 }
@@ -46,6 +51,22 @@ const store = new Vuex.Store({
             state.notifications = [];
         },
 
+        UPDATE_VALUE_DRIVERS(state, value_drivers) {
+            state.value_drivers = value_drivers;
+        },
+
+        CLEAR_VALUE_DRIVERS(state) {
+            state.value_drivers = [];
+        },
+
+        UPDATE_SUBPROCESSES(state, subprocesses) {
+            state.subprocesses = subprocesses;
+        },
+
+        CLEAR_SUBPROCESSES(state) {
+            state.subprocesses = [];
+        },
+
     },
 
     actions: {
@@ -53,7 +74,7 @@ const store = new Vuex.Store({
             commit('SET_STATE_LOADING', message);
         },
 
-        clearStateLoading({commit},) {
+        clearStateLoading({commit}) {
             commit('CLEAR_STATE_LOADING');
         },
 
@@ -67,6 +88,28 @@ const store = new Vuex.Store({
 
         clearNotifications({commit}) {
             commit('CLEAR_NOTIFICATIONS');
+        },
+
+        updateValueDrivers({commit}, value_drivers) {
+            commit('UPDATE_VALUE_DRIVERS', value_drivers);
+        },
+
+        clearValueDrivers({commit}) {
+            commit('CLEAR_VALUE_DRIVERS');
+        },
+
+        updateSubprocesses({commit}, subprocesses) {
+            commit('UPDATE_SUBPROCESSES', subprocesses);
+        },
+
+        clearSubprocesses({commit}) {
+            commit('CLEAR_SUBPROCESSES');
+        },
+
+        clearAllLogOut({commit}) {
+            commit('CLEAR_NOTIFICATIONS');
+            commit('CLEAR_VALUE_DRIVERS');
+            commit('CLEAR_SUBPROCESSES');
         },
     },
 

@@ -51,9 +51,9 @@ export default {
   },
 
   methods: {
-    get_vcs_table() {
+    get_vcs_table(vcs_id) {
       const project_id = this.$route.params.project_id;
-      CVSVCSService.get_vcs_table(project_id, this.vcs.id)
+      CVSVCSService.get_vcs_table(project_id, vcs_id)
           .catch(error => {
             console.log(error);
             Notification.emit_standard_error_message();
@@ -69,7 +69,7 @@ export default {
   watch: {
     vcs() {
       this.vcs_table = [];
-      this.get_vcs_table();
+      this.get_vcs_table(this.vcs.id);
     },
   },
 

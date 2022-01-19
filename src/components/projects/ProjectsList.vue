@@ -6,7 +6,13 @@
         class="mx-5 mt-1"
     >
 
-      <v-hover v-for="project in projects" v-slot="{ hover }">
+      <v-list-item v-if="projects.length === 0">
+        <v-list-item-content>
+          <v-list-item-title>You have no projects yet.</v-list-item-title>
+        </v-list-item-content>
+      </v-list-item>
+
+      <v-hover v-else v-for="project in projects" v-slot="{ hover }">
         <v-list-item
             :class="'project-with-id-' + project.id"
             :to="{ name: 'Workbench', params: { project_id: project.id } }"

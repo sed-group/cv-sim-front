@@ -191,13 +191,14 @@
 
 
 <script>
-import VCSSubprocessesService from '@/services/vcs-subprocess.service';
 import Notification from '@/models/utils/Notification';
 import LoadingAnimaiton from '@/components/utils/LoadingAnimaiton';
 
 export default {
   name: 'VCSProcessSelect',
+
   components: {LoadingAnimaiton},
+
   props: {
     show: {
       type: Boolean,
@@ -212,9 +213,6 @@ export default {
   data() {
     return {
       tab: null,
-
-      subprocesses: null,
-
     };
   },
 
@@ -233,21 +231,6 @@ export default {
       this.emit_close();
     },
 
-    get_subprocesses() {
-      this.subprocesses = null;
-      const project_id = this.$route.params.project_id;
-      VCSSubprocessesService.get_all(project_id)
-          .catch(error => {
-            console.log(error);
-            Notification.emit_standard_error_message();
-          })
-          .then(data => {
-            if (!!data) {
-              this.subprocesses = data.chunk;
-            }
-          });
-    },
-
     button_clicked() {
       new Notification('info', 'This has not been implemented yet.').push();
     },
@@ -256,9 +239,12 @@ export default {
   watch: {
     show() {
       this.tab = 0; // Making sure first tab always selected from scratch
-      if (this.show === true) { // when opening
-        this.get_subprocesses();
-      }
+    },
+  },
+
+  computed: {
+    subprocesses() {
+      return this.$store.state.subprocesses;
     },
   },
 

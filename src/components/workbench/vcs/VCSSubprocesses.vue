@@ -3,54 +3,70 @@
 
     <div style="position: relative">
 
-      <div v-if="!!subprocesses" class="overflow-y-auto px-5 pb-10" style="height: 500px">
-        <v-list v-if="subprocesses.length > 0">
-          <template v-for="(process, index) in subprocesses">
-            <v-menu absolute offset-y>
-              <template v-slot:activator="{ on, attrs }">
-                <v-list-item v-bind="attrs"
-                             v-on="on"
-                             :class="'subprocess-with-id-' + process.id"
-                             :disabled="loading_list_items[index]"
-                >
-                  <v-list-item-content>
-                    <v-card :loading="loading_list_items[index]"
-                            loader-height="30"
-                            style="background-color: transparent"
-                            flat>
-                      <v-list-item-title>
-                        {{ process.name }}
-                      </v-list-item-title>
-                      <v-list-item-subtitle>
-                        Subprocess of <b>{{ process.parent_process.category }}: {{ process.parent_process.name }}</b>
-                      </v-list-item-subtitle>
-                    </v-card>
-                  </v-list-item-content>
-                </v-list-item>
-              </template>
-              <v-list>
-                <v-list-item key="1" link @click="edit_process(process)">
-                  <v-list-item-icon>
-                    <v-icon>mdi-pencil</v-icon>
-                  </v-list-item-icon>
-                  <v-list-item-title>Edit</v-list-item-title>
-                </v-list-item>
-                <v-list-item key="2" link @click="delete_process(process.id)">
-                  <v-list-item-icon>
-                    <v-icon>mdi-delete</v-icon>
-                  </v-list-item-icon>
-                  <v-list-item-title>Delete</v-list-item-title>
-                </v-list-item>
-              </v-list>
-            </v-menu>
-            <v-divider :class="'divider-for-subprocess-' + process.id"></v-divider>
-          </template>
-        </v-list>
-        <div v-else class="mt-5">You have not created any subprocesses yet.</div>
-      </div>
-      <div v-else style="height: 500px; display: grid; place-items: center">
+      <div v-if="loading_anim" style="height: 500px; display: grid; place-items: center">
         <LoadingAnimaiton></LoadingAnimaiton>
       </div>
+      <div v-else class="overflow-y-auto px-5 pb-10" style="height: 500px">
+
+        <div v-if="no_processes === true" class="mt-5">
+          You have not created any subprocesses yet.
+        </div>
+
+        <div v-else v-for="group in subprocess_groups" class="mb-5">
+
+          <v-tooltip left color="primary">
+            <template v-slot:activator="{ on, attrs }">
+              <span class="text-h6" v-bind="attrs" v-on="on">{{ group.parent_process.name }}</span>
+            </template>
+            <span>{{ group.parent_process.category }}</span>
+          </v-tooltip>
+
+          <v-list v-if="subprocesses.length > 0">
+            <template v-for="(process, index) in group.subprocesses">
+              <v-menu absolute offset-y :key="process.id">
+                <template v-slot:activator="{ on, attrs }">
+                  <v-list-item v-bind="attrs"
+                               v-on="on"
+                               :class="'subprocess-with-id-' + process.id"
+                               :disabled="process.loading === true"
+                  >
+                    <v-list-item-content>
+                      <v-card :loading="process.loading === true"
+                              loader-height="30"
+                              style="background-color: transparent"
+                              flat>
+                        <v-list-item-title>
+                          {{ process.name }}
+                        </v-list-item-title>
+                        <v-list-item-subtitle>
+                          Subprocess of <b>{{ process.parent_process.category }}: {{ process.parent_process.name }}</b>
+                        </v-list-item-subtitle>
+                      </v-card>
+                    </v-list-item-content>
+                  </v-list-item>
+                </template>
+                <v-list>
+                  <v-list-item key="1" link @click="edit_process(process)">
+                    <v-list-item-icon>
+                      <v-icon>mdi-pencil</v-icon>
+                    </v-list-item-icon>
+                    <v-list-item-title>Edit</v-list-item-title>
+                  </v-list-item>
+                  <v-list-item key="2" link @click="delete_process(process.id)">
+                    <v-list-item-icon>
+                      <v-icon>mdi-delete</v-icon>
+                    </v-list-item-icon>
+                    <v-list-item-title>Delete</v-list-item-title>
+                  </v-list-item>
+                </v-list>
+              </v-menu>
+              <v-divider :class="'divider-for-subprocess-' + process.id"
+                         v-if="index !== (group.subprocesses.length - 1)"></v-divider>
+            </template>
+          </v-list>
+        </div>
+      </div>
+
 
       <!-- CREATE NEW BUTTON -->
       <v-tooltip top>
@@ -69,6 +85,7 @@
       </v-tooltip>
 
     </div>
+
 
     <!-- CREATE / EDIT NEW FORM -->
     <v-dialog
@@ -135,20 +152,21 @@
       </v-card>
     </v-dialog>
 
+
     <VCSProcessSelect :show="show_process_select"
+                      :show_subprocesses="false"
                       @close="on_close_process_select"
-                      :custom_processes="custom_processes"
-                      :show_custom_processes="false"
                       @iso-process-selected="on_iso_process_selected"></VCSProcessSelect>
+
 
     <ConfirmDialog
         ref="confirm_dialog"
         title="Delete subprocess?"
-        message="Are you sure you want to delete this subprocess?"
+        :message="'Are you sure you want to delete \'' + process_to_delete + '\'?'"
+        :width="500"
         btn_confirm="Delete"
         btn_confirm_clr="error"
         btn_reject="Cancel"
-        :persistent="true"
     ></ConfirmDialog>
 
   </v-card>
@@ -169,7 +187,13 @@ export default {
   props: {
     subprocesses: {
       type: Array,
-      default: undefined,
+      default() {
+        return [];
+      },
+    },
+    loading_anim: {
+      type: Boolean,
+      default: true,
     },
   },
 
@@ -198,13 +222,12 @@ export default {
       loading: false,
       form_type: 'create',
       subprocess_editing_id: null,
+      process_to_delete: '',
 
       // Process select
       show_process_select: false,
-      custom_processes: [],
       iso_processes: ISOProcesses,
-
-      loading_list_items: [],
+      no_processes: false,
 
     };
   },
@@ -219,21 +242,24 @@ export default {
     },
 
     delete_process(id) {
+      const process = this.subprocesses.find(item => item.id === id);
+      this.process_to_delete = process.parent_process.name + ': ' + process.name;
       this.$refs.confirm_dialog.open().then(result => {
         if (result === 'confirm') {
+          process.loading = true;
           const project_id = this.$route.params.project_id;
-          const index = this.subprocesses.findIndex(x => x.id === id);
-          this.loading_list_items[index] = true;
           VCSSubprocessesService.delete_one(project_id, id)
               .catch(error => {
-                this.loading_list_items[index] = false;
+                process.loading = false;
                 console.error(error);
               })
               .then(response => {
-                this.loading_list_items[index] = false;
+                process.loading = false;
                 if (response === true) {
                   $('.subprocess-with-id-' + id).fadeOut(500);
-                  $('.divider-for-subprocess-' + id).fadeOut(500);
+                  $('.divider-for-subprocess-' + id).fadeOut(500, () => {
+                    this.$emit('subprocess-deleted');
+                  });
                 }
               });
         }
@@ -303,11 +329,30 @@ export default {
 
   },
 
-  watch: {
-    subprocesses() {
+  computed: {
+    subprocess_groups() {
+      console.log('subprocess_groups()');
+      const grouped_processes = [];
       if (!!this.subprocesses) {
-        this.loading_list_items = new Array(this.subprocesses.length).fill(false);
+        const unique_parent_process_ids = [...new Set(this.subprocesses.map(item => item.parent_process.id))];
+        unique_parent_process_ids.sort();
+        for (const id of unique_parent_process_ids) {
+          grouped_processes.push({
+            parent_process: this.iso_processes.find(item => item.id === id),
+            subprocesses: this.subprocesses.filter(item => item.parent_process.id === id),
+          });
+        }
       }
+      this.no_processes = grouped_processes.length === 0;
+
+      for (const group of grouped_processes) {
+        console.log(group.parent_process.name);
+        for (const process of group.subprocesses) {
+          console.log(` - ${process.name}`);
+        }
+      }
+
+      return grouped_processes;
     },
   },
 

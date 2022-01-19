@@ -23,14 +23,18 @@
 
       <v-tab-item key="value-drivers">
         <VCSValueDrivers :value_drivers="value_drivers"
+                         :loading_anim="loading.value_drivers"
+                         @value-driver-created="on_value_driver_created"
                          @value-driver-edited="on_value_driver_edited"
-                         @value-driver-created="on_value_driver_created"></VCSValueDrivers>
+                         @value-driver-deleted="on_value_driver_deleted"></VCSValueDrivers>
       </v-tab-item>
 
       <v-tab-item key="subprocesses">
         <VCSSubprocesses :subprocesses="subprocesses"
+                         :loading_anim="loading.subprocesses"
+                         @subprocess-created="on_subprocess_created"
                          @subprocess-edited="on_subprocess_edited"
-                         @subprocess-created="on_subprocess_created"></VCSSubprocesses>
+                         @subprocess-deleted="on_subprocess_deleted"></VCSSubprocesses>
       </v-tab-item>
 
     </v-tabs-items>
@@ -44,6 +48,8 @@ import VCSValueDrivers from '@/components/workbench/vcs/VCSValueDrivers';
 import VCSSubprocesses from '@/components/workbench/vcs/VCSSubprocesses';
 import VCSValueDriversService from '@/services/vcs-value-drivers.service';
 import VCSSubprocessesService from '@/services/vcs-subprocess.service';
+import ValueDrivers from '@/models/ValueDrivers';
+import Subprocesses from '@/models/Subprocesses';
 
 export default {
   name: 'ItemManager',
@@ -66,61 +72,82 @@ export default {
 
   data: () => ({
     tab: 0,
-    value_drivers: undefined,
-    subprocesses: undefined,
-
-    confirm_title: '',
-    confirm_msg: 'Are you sure you want to delete this project?',
+    loading: {
+      subprocesses: true,
+      value_drivers: true,
+    },
   }),
 
   methods: {
     get_value_drivers() {
-      this.value_drivers = undefined;
+      this.loading.value_drivers = true;
+      ValueDrivers.clear();
       const project_id = this.$route.params.project_id;
-      VCSValueDriversService.get_all(project_id).then(response => {
-        const value_drivers = response.chunk;
-        if (!!value_drivers) {
-          this.value_drivers = [];
-          for (let i = 0; i < value_drivers.length; i++) {
-            this.value_drivers.push(value_drivers[i]);
-          }
-          this.value_drivers.sort((a, b) => (a.id > b.id) ? 1 : -1);
-        }
-      });
+      VCSValueDriversService.get_all(project_id)
+          .catch(error => {
+            this.loading.value_drivers = false;
+            console.error(error);
+            new Notification(error).push();
+          })
+          .then(response => {
+            this.loading.value_drivers = false;
+            const value_drivers = response.chunk;
+            if (!!value_drivers) {
+              value_drivers.sort((a, b) => (a.id > b.id) ? 1 : -1);
+              new ValueDrivers(value_drivers).push();
+            }
+          });
     },
 
     get_subprocesses() {
-      this.subprocesses = undefined;
+      this.loading.subprocesses = true;
+      Subprocesses.clear();
       const project_id = this.$route.params.project_id;
-      VCSSubprocessesService.get_all(project_id).then(response => {
-        const subprocesses = response.chunk;
-        if (!!subprocesses) {
-          this.subprocesses = [];
-          for (let i = 0; i < subprocesses.length; i++) {
-            this.subprocesses.push(subprocesses[i]);
-          }
-          this.subprocesses.sort((a, b) => (a.id > b.id) ? 1 : -1);
-        }
-      });
+      VCSSubprocessesService.get_all(project_id)
+          .catch(error => {
+            this.loading.subprocesses = false;
+            console.error(error);
+            new Notification(error).push();
+          })
+          .then(response => {
+            this.loading.subprocesses = false;
+            const subprocesses = response.chunk;
+            if (!!subprocesses) {
+              subprocesses.sort((a, b) => (a.id > b.id) ? 1 : -1);
+              new Subprocesses(subprocesses).push();
+            }
+          });
     },
 
     on_value_driver_created(new_value_driver) {
-      this.value_drivers.push(new_value_driver);
+      const value_drivers = this.value_drivers.slice();
+      value_drivers.push(new_value_driver);
+      new ValueDrivers(value_drivers).push();
     },
-
     on_value_driver_edited(new_value_driver) {
-      const index = this.value_drivers.findIndex(obj => obj.id === new_value_driver.id);
-      this.value_drivers[index].name = new_value_driver.name;
+      const value_drivers = this.value_drivers.slice();
+      const index = value_drivers.findIndex(item => item.id === new_value_driver.id);
+      value_drivers[index].name = new_value_driver.name;
+      new ValueDrivers(value_drivers).push();
+    },
+    on_value_driver_deleted(id) {
+      new ValueDrivers(this.value_drivers.filter(item => item.id !== id)).push();
     },
 
     on_subprocess_created(new_subprocess) {
-      this.subprocesses.push(new_subprocess);
+      const subprocesses = this.subprocesses.slice();
+      subprocesses.push(new_subprocess);
+      new Subprocesses(subprocesses).push();
     },
-
     on_subprocess_edited(new_subprocess) {
-      const index = this.subprocesses.findIndex(obj => obj.id === new_subprocess.id);
-      this.subprocesses[index].name = new_subprocess.name;
-      this.subprocesses[index].parent_process = new_subprocess.parent_process;
+      const subprocesses = this.subprocesses.slice();
+      const index = subprocesses.findIndex(item => item.id === new_subprocess.id);
+      subprocesses[index].name = new_subprocess.name;
+      subprocesses[index].parent_process = new_subprocess.parent_process;
+      new Subprocesses(subprocesses).push();
+    },
+    on_subprocess_deleted(id) {
+      new Subprocesses(this.subprocesses.filter(item => item.id !== id)).push();
     },
 
   },
@@ -134,6 +161,15 @@ export default {
     },
     selected_tab(value) {
       this.tab = (value === 'subprocesses') ? 1 : 0;
+    },
+  },
+
+  computed: {
+    value_drivers() {
+      return this.$store.state.value_drivers;
+    },
+    subprocesses() {
+      return this.$store.state.subprocesses;
     },
   },
 

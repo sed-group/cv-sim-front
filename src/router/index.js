@@ -5,6 +5,7 @@ import store from '@/store/index';
 import Home from '@/views/Home';
 import WorkbenchView from '@/views/WorkbenchView';
 import Dashboard from '@/views/Dashboard';
+import TestingDuringDevelopment from '@/views/TestingDuringDevelopment';
 
 Vue.use(VueRouter);
 
@@ -32,6 +33,14 @@ const routes = [
             requiresAuth: true,
         },
         component: WorkbenchView,
+    },
+    {
+        name: 'TestingDuringDevelopment',
+        path: '/testing-during-development',
+        meta: {
+            requiresAuth: true,
+        },
+        component: TestingDuringDevelopment,
     },
 ];
 

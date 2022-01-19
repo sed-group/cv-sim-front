@@ -59,11 +59,17 @@ import DetailsBox from '@/components/DetailsBox';
 import WorkArea from '@/components/workbench/WorkArea';
 import WorkbenchSidebar from '@/components/workbench/WorkbenchSidebar';
 import SystemBar from '@/components/SystemBar';
-import CVSProjectService from '@/services/cvs-project.service';
-import CVSVCSService from '@/services/cvs-vcs.service';
-import VCSValueDrivers from '@/components/workbench/vcs/VCSValueDrivers';
 import VCSSubprocesses from '@/components/workbench/vcs/VCSSubprocesses';
 import ItemManager from '@/components/workbench/vcs/ItemManager';
+
+import CVSProjectService from '@/services/cvs-project.service';
+import CVSVCSService from '@/services/cvs-vcs.service';
+import VCSValueDriversService from '@/services/vcs-value-drivers.service';
+import VCSSubprocessesService from '@/services/vcs-subprocess.service';
+
+import ValueDrivers from '@/models/ValueDrivers';
+import Notification from '@/models/utils/Notification';
+import Subprocesses from '@/models/Subprocesses';
 
 export default {
   name: 'WorkbenchView',
@@ -71,7 +77,6 @@ export default {
   components: {
     ItemManager,
     VCSSubprocesses,
-    VCSValueDrivers,
     WorkbenchMenubar,
     DetailsBox,
     WorkArea,
@@ -91,7 +96,7 @@ export default {
     show_details: false,
 
     selected_vcs: {},
-    vcs_list: [],
+    vcs_list: null,
   }),
 
   methods: {
@@ -108,8 +113,9 @@ export default {
       this.selected_vcs = this.vcs_list.find(obj => obj.id === id);
     },
 
-    get_all_vcs() {
+    get_vcss() {
       const project_id = this.$route.params.project_id;
+      new ValueDrivers([]).push();
       CVSVCSService.get_all_vcss(project_id).then(response => {
         if (!!response) {
           const vcss = response.chunk;
@@ -119,16 +125,59 @@ export default {
               this.vcs_list.push(vcss[i]);
             }
             this.vcs_list.sort((a, b) => (a.id > b.id) ? 1 : -1); // sorting based on ascending id
+            new ValueDrivers(this.vcs_list).push();
+          } else {
+            Notification.emit_standard_error_message();
           }
         }
       });
+    },
+
+    get_value_drivers() {
+      ValueDrivers.clear();
+      const project_id = this.$route.params.project_id;
+      VCSValueDriversService.get_all(project_id)
+          .catch(error => {
+            console.error(error);
+            new Notification(error).push();
+          })
+          .then(response => {
+            const value_drivers = response.chunk;
+            if (!!value_drivers) {
+              value_drivers.sort((a, b) => (a.id > b.id) ? 1 : -1);
+              new ValueDrivers(value_drivers).push();
+            } else {
+              Notification.emit_standard_error_message();
+            }
+          });
+    },
+
+    get_subprocesses() {
+      Subprocesses.clear();
+      const project_id = this.$route.params.project_id;
+      VCSSubprocessesService.get_all(project_id)
+          .catch(error => {
+            console.error(error);
+            new Notification(error).push();
+          })
+          .then(response => {
+            const subprocesses = response.chunk;
+            if (!!subprocesses) {
+              subprocesses.sort((a, b) => (a.id > b.id) ? 1 : -1);
+              new Subprocesses(subprocesses).push();
+            } else {
+              Notification.emit_standard_error_message();
+            }
+          });
     },
 
   },
 
   mounted() {
     this.get_project();
-    this.get_all_vcs();
+    this.get_vcss();
+    this.get_value_drivers();
+    this.get_subprocesses();
   },
 
 };

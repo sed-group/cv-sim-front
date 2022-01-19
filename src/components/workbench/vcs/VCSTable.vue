@@ -1,4 +1,5 @@
 <template>
+
   <v-container v-if="table_loading === true" fill-height fluid style="min-height: 500px">
     <v-row justify="center">
       <v-col align="center">
@@ -7,7 +8,14 @@
     </v-row>
   </v-container>
 
-  <div v-else-if="no_table === true">no table :(</div>
+
+  <div v-else-if="no_table === true" class="no-table-container">
+    <v-btn @click="create_empty_table" color="success">
+      <v-icon left>mdi-plus</v-icon>
+      Create table
+    </v-btn>
+  </div>
+
 
   <div v-else class="vcs-table pt-5 pb-16" style="overflow: scroll">
 
@@ -129,16 +137,39 @@
         <tr>
           <!-- ROW ORDERING -->
           <td :rowspan="row.stakeholder_needs.length + 1" v-if="edit" class="pa-0 ma-0">
-            <div>
-              <v-btn icon>
-                <v-icon>mdi-arrow-up-thick</v-icon>
-              </v-btn>
-            </div>
-            <div>
-              <v-btn icon>
-                <v-icon>mdi-arrow-down-thick</v-icon>
-              </v-btn>
-            </div>
+
+            <table>
+              <tr>
+                <td class="pa-0">
+                  <v-tooltip right open-delay="500">
+                    <template v-slot:activator="{ on, attrs }">
+                      <v-btn icon v-bind="attrs" v-on="on" @click="move_row_up(row.id)">
+                        <v-icon>mdi-arrow-up-thick</v-icon>
+                      </v-btn>
+                    </template>
+                    <span>Move row up</span>
+                  </v-tooltip>
+                </td>
+                <td rowspan="2" class="pa-0">
+                  <v-btn icon color="error" @click="delete_row(row.id)">
+                    <v-icon>mdi-delete</v-icon>
+                  </v-btn>
+                </td>
+              </tr>
+              <tr>
+                <td class="pa-0">
+                  <v-tooltip right open-delay="500">
+                    <template v-slot:activator="{ on, attrs }">
+                      <v-btn icon v-bind="attrs" v-on="on" @click="move_row_down(row.id)">
+                        <v-icon>mdi-arrow-down-thick</v-icon>
+                      </v-btn>
+                    </template>
+                    <span>Move row down</span>
+                  </v-tooltip>
+                </td>
+              </tr>
+            </table>
+
           </td>
 
           <!-- PROCESS -->
@@ -146,7 +177,7 @@
 
             <v-tooltip v-if="!!row.iso_process" bottom color="primary">
               <template v-slot:activator="{ on, attrs }">
-                <v-list>
+                <v-list class="transparent my-list-container" width="200">
                   <v-list-item @click="select_process(row.id)" v-bind="attrs" v-on="on">
                     <v-list-item-content>
                       <v-list-item-title>
@@ -164,20 +195,22 @@
 
             <v-tooltip v-else-if="!!row.subprocess" bottom color="primary">
               <template v-slot:activator="{ on, attrs }">
-                <v-list>
+                <v-list class="transparent my-list-container" width="200">
                   <v-list-item @click="select_process(row.id)" v-bind="attrs" v-on="on">
                     <v-list-item-content>
                       <v-list-item-title>
                         {{ row.subprocess.name }}
                       </v-list-item-title>
                       <v-list-item-subtitle>
-                        {{ row.subprocess.parent_process.name }}
+                        ISO: {{ row.subprocess.parent_process.name }}
                       </v-list-item-subtitle>
                     </v-list-item-content>
                   </v-list-item>
                 </v-list>
               </template>
-              <span>Subprocess of ISO process</span>
+              <span>
+                Subprocess of {{ row.subprocess.parent_process.name }} ({{ row.subprocess.parent_process.category }})
+              </span>
             </v-tooltip>
 
             <div v-else @click="select_process(row.id)" class="empty-process-select"
@@ -208,20 +241,22 @@
 
             <v-tooltip v-else-if="!!row.subprocess" bottom color="primary">
               <template v-slot:activator="{ on, attrs }">
-                <v-list class="transparent">
+                <v-list class="transparent" width="200">
                   <v-list-item v-bind="attrs" v-on="on" link>
                     <v-list-item-content>
                       <v-list-item-title>
                         {{ row.subprocess.name }}
                       </v-list-item-title>
                       <v-list-item-subtitle>
-                        {{ row.subprocess.parent_process.name }}
+                        ISO: {{ row.subprocess.parent_process.name }}
                       </v-list-item-subtitle>
                     </v-list-item-content>
                   </v-list-item>
                 </v-list>
               </template>
-              <span>Subprocess of ISO process</span>
+              <span>
+                Subprocess of {{ row.subprocess.parent_process.name }} ({{ row.subprocess.parent_process.category }})
+              </span>
             </v-tooltip>
 
             <span v-else></span>
@@ -234,7 +269,10 @@
                           placeholder="Stakeholder"
             ></v-text-field>
           </td>
-          <td v-else :rowspan="row.stakeholder_needs.length">{{ row.stakeholder.toUpperCase() }}</td>
+          <td v-else-if="!!row.stakeholder" :rowspan="row.stakeholder_needs.length">
+            {{ row.stakeholder.toUpperCase() }}
+          </td>
+          <td v-else :rowspan="row.stakeholder_needs.length"></td>
 
           <!-- STAKEHOLDER EXPECTATIONS -->
           <td v-if="edit" :rowspan="row.stakeholder_needs.length + 1">
@@ -316,15 +354,18 @@
 
           <!-- VALUE DRIVERS -->
           <td>
-            <v-select v-if="edit"
-                      :items="value_drivers"
-                      item-text="name"
-                      item-value="id"
-                      chips
-                      placeholder="Value drivers"
-                      multiple
-                      dense
-                      deletable-chips
+            <v-select
+                v-if="edit"
+                v-model="stakeholder_need.value_drivers"
+                :items="value_drivers"
+                item-text="name"
+                item-value="id"
+                return-object
+                chips
+                placeholder="Value drivers"
+                multiple
+                dense
+                deletable-chips
             ></v-select>
             <div v-else
                  v-for="value_driver in stakeholder_need.value_drivers"
@@ -370,6 +411,7 @@
         @subprocess-selected="on_subprocess_selected"
     ></VCSProcessSelect>
 
+
     <v-dialog v-model="open_dialog" width="500">
       <v-card class="pa-5">
         <v-tabs>
@@ -395,7 +437,28 @@
       </v-card>
     </v-dialog>
 
+
+    <!-- SNACKBAR -->
+    <v-snackbar
+        v-model="snackbar.show"
+        :timeout="snackbar.timeout"
+        :color="snackbar.color"
+    >
+      {{ snackbar.text }}
+
+      <template v-slot:action="{ attrs }" v-if="snackbar.closeable === true">
+        <v-btn
+            v-bind="attrs"
+            @click="snackbar.show = false"
+            icon
+        >
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
+      </template>
+    </v-snackbar>
+
   </div>
+
 
 </template>
 
@@ -408,6 +471,7 @@ import ISOProcesses from '@/models/ISOProcesses';
 
 import CVSVCSService from '@/services/cvs-vcs.service';
 import VCSValueDriversService from '@/services/vcs-value-drivers.service';
+import ValueDrivers from '@/models/ValueDrivers';
 
 export default {
   name: 'VCSTable',
@@ -441,12 +505,19 @@ export default {
       editing_row_id: null,
 
       displayed_table: null,
-      value_drivers: null,
 
       rules: {
         rank_weight: [
           v => v >= 0 || 'Should be positive',
         ],
+      },
+
+      snackbar: {
+        show: false,
+        timout: -1,
+        text: null,
+        closeable: true,
+        color: null,
       },
     };
   },
@@ -484,46 +555,47 @@ export default {
     cancel_clicked() {
       this.edit = false;
       this.displayed_table = this.vcs_table.slice();
-      // todo: sort based on row index
+      this.displayed_table.sort((a, b) => (a.row_index > b.row_index) ? 1 : -1);
     },
     save_clicked() {
-      console.log(this.displayed_table);
       this.save_loading = true;
-
-      // Checking and cleaning provided table data
-      for (const row of this.displayed_table) {
-        row.stakeholder = row.stakeholder.toUpperCase();
-
-        for (const stakeholder_need of row.stakeholder_needs) {
-          if (stakeholder_need.rank_weight === '') {
-            stakeholder_need.rank_weight = 0;
-          }
-        }
-      }
 
       // Creating request model
       const table_rows = [];
       for (const row of this.displayed_table) {
         const new_row = {};
 
+        // Row index
+        new_row.row_index = row.row_index;
+
+        // Process
+        console.log(row);
+        new_row.iso_process_id = undefined;
+        new_row.subprocess_id = undefined;
         if (row.iso_process) {
+          console.log('ISO process exists');
           new_row.iso_process_id = row.iso_process.id;
         } else if (row.subprocess) {
+          console.log('Subprocesses exists');
           new_row.subprocess_id = row.subprocess.id;
         }
 
-        new_row.stakeholder = row.stakeholder;
+        // Stakeholder
+        new_row.stakeholder = (!!row.stakeholder) ? row.stakeholder.toUpperCase() : row.stakeholder;
 
+        // Stakeholder expectations
         new_row.stakeholder_expectations = row.stakeholder_expectations;
 
+        // Stakeholder needs
         new_row.stakeholder_needs = row.stakeholder_needs.map(stakeholder_need => {
           return {
             need: stakeholder_need.need,
-            rank_weight: stakeholder_need.rank_weight,
+            rank_weight: (!!stakeholder_need.rank_weight) ? stakeholder_need.rank_weight : 0,
             value_driver_ids: stakeholder_need.value_drivers.map(x => x.id),
           };
         });
 
+        console.log('new_row:');
         console.log(new_row);
 
         table_rows.push(new_row);
@@ -531,41 +603,33 @@ export default {
 
       CVSVCSService.create_vcs_table(this.$route.params.project_id, this.vcs_id, table_rows)
           .catch(error => {
+            console.error('error:');
             console.error(error);
-            new Notification('error', error);
+            new Notification('error', error).push();
           })
           .then(response => {
             if (response === true) {
-              this.save_loading = false;
-              this.edit = false;
-              new Notification('success', 'Successfully created table.').push();
+              this.snackbar = {
+                text: 'Table saved successfully.',
+                timeout: 3000,
+                color: 'success',
+                clearable: false,
+                show: true,
+              };
             } else {
               this.displayed_table = this.vcs_table.slice();
-              new Notification('error',
-                  'For some reason, the table creation failed. Please refresh the page and try again.',
-              ).push();
-              this.save_loading = false;
-              this.edit = false;
+              this.snackbar.text = 'Table creation failed for some reason. Please try again.';
+              this.snackbar.timeout = -1;
+              this.snackbar.color = 'error';
+              this.snackbar.closeable = true;
+              this.snackbar.show = true;
             }
+            this.edit = false;
+            this.save_loading = false;
           });
     },
 
-    get_value_drivers() {
-      this.value_drivers = null;
-      const project_id = this.$route.params.project_id;
-      VCSValueDriversService.get_all(project_id)
-          .catch(error => {
-            console.error(error);
-            Notification.emit_standard_error_message();
-          })
-          .then(response => {
-            const value_drivers = response.chunk;
-            if (!!value_drivers) {
-              this.value_drivers = value_drivers;
-              this.value_drivers.sort((a, b) => (a.id > b.id) ? 1 : -1);
-            }
-          });
-    },
+
 
     add_row() {
       const empty_stakeholder_needs = [{
@@ -574,13 +638,44 @@ export default {
         value_drivers: new Array(0),
       }];
       const empty_row = {
+        id: this.get_unique_id(),
         iso_process: null,
         subprocess: null,
-        stakeholder: '',
+        stakeholder: null,
         stakeholder_expectations: null,
         stakeholder_needs: empty_stakeholder_needs,
       };
       this.displayed_table.push(empty_row);
+      this.update_row_indices();
+    },
+    delete_row(row_id) {
+      const index = this.displayed_table.findIndex(obj => obj.id === row_id);
+      this.displayed_table.splice(index, 1);
+      this.update_row_indices();
+    },
+
+    move_row_up(row_id) {
+      const above_row_index = this.displayed_table.findIndex(obj => obj.id === row_id);
+      const above_row = this.displayed_table[above_row_index];
+      const min_row_index = Math.min.apply(Math, this.displayed_table.map(obj => obj.row_index));
+      if (above_row.row_index > min_row_index) {
+        const below_row = this.displayed_table.find(obj => obj.row_index === above_row.row_index - 1);
+        this.swap_row_places(above_row, below_row);
+      }
+    },
+    move_row_down(row_id) {
+      const below_row = this.displayed_table.find(obj => obj.id === row_id);
+      const max_row_index = Math.max.apply(Math, this.displayed_table.map(obj => obj.row_index));
+      if (below_row.row_index < max_row_index) {
+        const above_row = this.displayed_table.find(obj => obj.row_index === below_row.row_index + 1);
+        this.swap_row_places(above_row, below_row);
+      }
+    },
+    swap_row_places(row1, row2) {
+      const mem = row1.row_index;
+      row1.row_index = row2.row_index;
+      row2.row_index = mem;
+      this.displayed_table.sort((a, b) => (a.row_index > b.row_index) ? 1 : -1);
     },
 
     add_stakeholder_need(row_id) {
@@ -592,12 +687,40 @@ export default {
       };
       this.displayed_table[index].stakeholder_needs.push(empty_stakeholder_needs);
     },
+    get_unique_id() {
+      return Math.floor(Math.random() * Math.floor(Math.random() * (new Date().getTime())));
+    },
+    update_row_indices() {
+      for (let i = 0; i < this.displayed_table.length; i++) {
+        this.displayed_table[i].row_index = i;
+      }
+    },
+
+    create_empty_table() {
+      this.displayed_table = [];
+      const empty_stakeholder_needs = [{
+        need: '',
+        rank_weight: 0,
+        value_drivers: [],
+      }];
+      const new_empty_row = {
+        id: this.get_unique_id(),
+        row_index: 0,
+        iso_process: null,
+        subprocess: null,
+        stakeholder: null,
+        stakeholder_expectations: null,
+        stakeholder_needs: empty_stakeholder_needs,
+      };
+      this.displayed_table.push(new_empty_row);
+      this.no_table = false;
+      this.edit = true;
+    },
 
   },
 
   watch: {
     vcs_table() {
-      this.get_value_drivers();
       this.edit = false;
       this.table_loading = true;
       if (this.vcs_table.length === 0) {
@@ -605,11 +728,20 @@ export default {
       } else {
         this.no_table = false;
         this.displayed_table = this.vcs_table.slice();
-        // todo: sort based on row index
+        this.displayed_table.sort((a, b) => (a.row_index > b.row_index) ? 1 : -1);
       }
-      setTimeout(() => { // need a delay for it to show, don't know why
+      setTimeout(() => { // need a delay for it to show
         this.table_loading = false;
       }, 500);
+    },
+  },
+
+  computed: {
+    value_drivers() {
+      return this.$store.state.value_drivers;
+    },
+    subprocesses() {
+      return this.$store.state.subprocesses;
     },
   },
 
@@ -649,7 +781,7 @@ export default {
 }
 
 .my-table tbody:hover {
-  background-color: #eeeeee;
+  background-color: #FFFFE0;
 }
 
 .my-table th,
@@ -681,6 +813,10 @@ export default {
   color: black;
 }
 
+tbody:nth-child(odd) {
+  background-color: #f7f7f7;
+}
+
 
 tfoot > tr {
   border: none !important;
@@ -691,8 +827,7 @@ tfoot > tr > td {
 }
 
 .value-drivers:hover {
-  text-decoration: underline;
-  color: black;
+  background-color: rgba(0, 0, 0, 5%);
 }
 
 .empty-process-select {
@@ -707,6 +842,12 @@ tfoot > tr > td {
 
 .empty-process-select:hover > * {
   transform: scale(1.25);
+}
+
+.no-table-container {
+  display: grid;
+  place-items: center;
+  margin: 4em;
 }
 
 </style>

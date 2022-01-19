@@ -26,13 +26,15 @@ export default {
   methods: {
     close_notification(id) {
       const $notification = $('.notification-with-id' + id);
-      $notification.css({
-        transition: 'transform 200ms ease',
-        transform: 'translateX(-100%)',
-      });
-      $notification.fadeOut(200, () => {
-        this.$store.dispatch('removeNotification', id);
-      });
+      if (!!$notification) {
+        $notification.css({
+          transition: 'transform 200ms ease',
+          transform: 'translateX(-100%)',
+        });
+        $notification.fadeOut(200, () => {
+          this.$store.dispatch('removeNotification', id);
+        });
+      }
     },
   },
 

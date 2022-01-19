@@ -74,7 +74,7 @@ export default {
   props: ['show_form'],
 
   data: () => ({
-    loading: true,
+    loading: false,
     valid: true,
     project_name: '',
     project_description: '',

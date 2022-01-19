@@ -21,14 +21,8 @@
       </v-btn-toggle>
     </v-toolbar>
 
-    <v-btn @click="notify_all">all</v-btn>
-    <v-btn @click="notify_success">success</v-btn>
-    <v-btn @click="notify_info">info</v-btn>
-    <v-btn @click="notify_warning">warning</v-btn>
-    <v-btn @click="notify_error">error</v-btn>
-
-    <span class="ml-5" v-if="!!projects">Showing {{ projects.length }} of {{ projects.length }} <span
-        v-if="projects.length === 1">project</span><span v-else>projects</span>.</span>
+    <!--<span class="ml-5" v-if="!!projects">Showing {{ projects.length }} of {{ projects.length }} <span
+        v-if="projects.length === 1">project</span><span v-else>projects</span>.</span>-->
 
 
     <div class="projects-layouts">
@@ -59,7 +53,7 @@
     </div>
 
 
-    <v-tooltip left v-if="project_layout_selection === 1">
+    <v-tooltip left v-if="project_layout_selection === 1" v-model="show_tooltip">
       <template v-slot:activator="{ on, attrs }">
         <v-btn
             style="position: fixed; bottom: 2em; right: 2em"
@@ -74,7 +68,7 @@
           <v-icon>mdi-plus</v-icon>
         </v-btn>
       </template>
-      <span>Create new project</span>
+      <span>Click here to create new project</span>
     </v-tooltip>
 
 
@@ -106,8 +100,6 @@
 
 
 <script>
-import Notification from '@/models/utils/Notification';
-
 import CVSProjectService from '@/services/cvs-project.service';
 
 import ProjectCards from '@/components/projects/ProjectsCards';
@@ -137,6 +129,7 @@ export default {
     show_edit_project_form: false,
 
     project_to_edit: {},
+    show_tooltip: false,
   }),
 
   methods: {
@@ -197,29 +190,20 @@ export default {
       }
     },
 
-    notify_all() {
-      this.notify_success();
-      this.notify_info();
-      this.notify_warning();
-      this.notify_error();
-    },
-    notify_success() {
-      new Notification('success', 'This is a success notification. This is a success notification. This is a success notification. This is a success notification. This is a success notification.').push();
-    },
-    notify_info() {
-      new Notification('info', 'This is an info notification.sad asdsadasda sdasdasdasda sdasdas').push();
-    },
-    notify_warning() {
-      new Notification('warning', 'This is a warning notification.').push();
-    },
-    notify_error() {
-      new Notification('error', 'This is an error notification.').push();
-    },
-
   },
 
   mounted() {
     this.update_projects();
+  },
+
+  watch: {
+    projects() {
+      if (this.projects.length === 0) {
+        setTimeout(() => {
+          this.show_tooltip = true;
+        }, 2000);
+      }
+    },
   },
 
 };
