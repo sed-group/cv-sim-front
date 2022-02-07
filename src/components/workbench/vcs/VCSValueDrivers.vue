@@ -154,12 +154,7 @@ export default {
   },
 
   props: {
-    value_drivers: {
-      type: Array,
-      default() {
-        return [];
-      },
-    },
+    value_drivers: {},
     loading_anim: {
       type: Boolean,
       default: true,
@@ -205,10 +200,12 @@ export default {
               .then(response => {
                 value_driver.loading = false;
                 if (response === true) {
-                  $('.value-driver-' + id).fadeOut(500);
-                  $('.divider-for-value-driver-' + id).fadeOut(500, () => {
+                  const timer = 500; // [ms]
+                  $('.value-driver-' + id).fadeOut(timer);
+                  $('.divider-for-value-driver-' + id).fadeOut(timer);
+                  setTimeout(() => {
                     this.$emit('value-driver-deleted', id);
-                  });
+                  }, timer);
                 }
               });
         }

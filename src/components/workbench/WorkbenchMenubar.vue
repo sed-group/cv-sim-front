@@ -188,7 +188,9 @@
               <v-list :min-width="menu_min_width">
 
                 <v-list-item link dense exact>
-                  <v-list-item-icon></v-list-item-icon>
+                  <v-list-item-icon>
+                    <v-icon>mdi-cash-100</v-icon>
+                  </v-list-item-icon>
                   <v-list-item-title>Allocate costs</v-list-item-title>
                 </v-list-item>
 
@@ -255,7 +257,7 @@
     </v-col>
 
     <v-col class="d-flex justify-end">
-      <LoggedInUserInfo :user="user"></LoggedInUserInfo>
+      <LoggedInUserInfo></LoggedInUserInfo>
     </v-col>
 
   </v-layout>
@@ -263,7 +265,6 @@
 
 
 <script>
-
 import LoggedInUserInfo from '@/components/user/LoggedInUserInfo';
 
 export default {
@@ -272,8 +273,6 @@ export default {
   components: {LoggedInUserInfo},
 
   props: {
-    project: Object,
-    user: Object,
     checkbox_details: {
       type: Boolean,
       default: false,
@@ -312,8 +311,13 @@ export default {
     },
   },
 
-};
+  computed: {
+    project() {
+      return this.$store.state.Project.active_project;
+    },
+  },
 
+};
 </script>
 
 

@@ -1,7 +1,8 @@
 <template>
   <div class="notification-stack">
     <Notification
-        v-for="(notification, index) in notifications" v-if="index < 4"
+        v-for="(notification, index) in notifications"
+        v-if="index < 4"
         :notification="notification"
         :key="notification.id"
         :class="'notification-with-id' + notification.id"
@@ -32,7 +33,7 @@ export default {
           transform: 'translateX(-100%)',
         });
         $notification.fadeOut(200, () => {
-          this.$store.dispatch('removeNotification', id);
+          this.$store.dispatch('Notifications/removeNotification', id);
         });
       }
     },
@@ -40,7 +41,7 @@ export default {
 
   computed: {
     notifications() {
-      return this.$store.state.notifications;
+      return this.$store.state.Notifications.notifications;
     },
   },
 };

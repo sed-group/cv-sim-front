@@ -169,7 +169,7 @@ export default {
     },
 
     update_projects() {
-      if (this.$store.state.User.loggedIn) {
+      if (this.$store.state.User.logged_in) {
         CVSProjectService.get_all_projects()
             .catch(error => {
               console.log(error);

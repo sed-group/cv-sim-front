@@ -14,11 +14,7 @@
     <v-tabs-items v-model="tabs">
 
       <v-tab-item :key="1">
-        <VCSSidebarContent
-            @vcs-selected="on_vcs_selected"
-            :project="project"
-            :vcs_list="vcs_list"
-        ></VCSSidebarContent>
+        <VCSSidebarContent></VCSSidebarContent>
       </v-tab-item>
 
       <v-tab-item :key="2">
@@ -40,13 +36,12 @@ import Projects2 from '@/components/Projects2';
 import Elements from '@/components/Elements';
 import VCSSidebarContent from '@/components/workbench/vcs/VCSSidebarContent';
 
+import VCS from '@/models/VCS';
+
 export default {
   name: 'WorkbenchSidebar',
 
-  props: [
-    'project',
-    'vcs_list',
-  ],
+  props: [],
 
   components: {
     VCSSidebarContent,
@@ -69,12 +64,9 @@ export default {
         case 2:
         case 3:
           this.$emit('generic-working-view');
+          VCS.clear_active();
           break;
       }
-    },
-
-    on_vcs_selected(id) {
-      this.$emit('vcs-selected', id);
     },
 
   },

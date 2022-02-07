@@ -31,7 +31,8 @@ const httpClient = () => {
             if (err.response.status === 401) {
                 AuthService.logout();
                 router.push({name: 'Home'});
-                new Notification('error', 'Session expired. Please log in again.', 10000).push();
+                new Notification('error', 'Session expired. Please log in again.',
+                    {timeout: 3000, closeable: false}).push();
                 return;
             } else {
                 console.error(err.stack);

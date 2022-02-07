@@ -37,7 +37,34 @@
 
     </v-navigation-drawer>
 
-    <v-btn @click="loading = !loading">Toggle loading</v-btn>
+    <div>
+      <v-btn @click="loading = !loading">Toggle loading</v-btn>
+
+
+      <div v-for="desserts in desserts_list">
+        <v-data-table
+            :headers="headers"
+            :items="desserts"
+            v-sortable-data-table
+            @sorted="saveOrder"
+            item-key="name"
+        ></v-data-table>
+      </div>
+
+      <div>
+        <v-list two-line v-for="(persons, index) in person_lists">
+          <draggable v-model="person_lists[index]" animation="200" ghost-class="hidden-ghost" @end="hej">
+            <v-list-item v-for="person in persons" link>
+              <v-list-item-content>
+                <v-list-item-title>{{ person.name }}</v-list-item-title>
+                <v-list-item-subtitle>No. {{ person.id }}</v-list-item-subtitle>
+              </v-list-item-content>
+            </v-list-item>
+          </draggable>
+        </v-list>
+      </div>
+
+    </div>
 
   </div>
 
@@ -45,7 +72,8 @@
 
 
 <script>
-
+import draggable from 'vuedraggable';
+import Sortable from 'sortablejs';
 import LoadingAnimaiton from '@/components/utils/LoadingAnimaiton';
 
 export default {
@@ -53,6 +81,7 @@ export default {
 
   components: {
     LoadingAnimaiton,
+    draggable,
   },
 
   data() {
@@ -63,14 +92,109 @@ export default {
         {title: 'About', icon: 'mdi-help-box'},
       ],
       loading: true,
+
+      options: {
+        animation: 150,
+      },
+
+      person_lists: [
+        [
+          {id: 1, name: 'Oskar'},
+          {id: 2, name: 'Malin'},
+          {id: 3, name: 'Adam'},
+          {id: 4, name: 'Stefan'},
+        ],
+        [
+          {id: 1, name: 'A'},
+          {id: 2, name: 'B'},
+          {id: 3, name: 'C'},
+          {id: 4, name: 'D'},
+        ],
+      ],
+
+      headers: [
+        {
+          text: 'Dessert',
+          align: 'start',
+          sortable: false,
+          value: 'name',
+        },
+      ],
+      desserts_list: [
+        [
+          {
+            name: 'Frozen Yogurt',
+          },
+          {
+            name: 'Ice cream sandwich',
+          },
+          {
+            name: 'Eclair',
+          },
+          {
+            name: 'Cupcake',
+          },
+          {
+            name: 'Gingerbread',
+          },
+        ],
+        [
+          {
+            name: 'Oskar',
+          },
+          {
+            name: 'Malin',
+          },
+          {
+            name: 'Hej',
+          },
+          {
+            name: 'One',
+          },
+          {
+            name: 'Four',
+          },
+        ],
+      ],
     };
   },
-
+  methods: {
+    saveOrder(event) {
+      const movedItem = this.desserts.splice(event.oldIndex, 1)[0];
+      this.desserts.splice(event.newIndex, 0, movedItem);
+    },
+    hej() {
+      for (let i = 0; i < this.person_lists.length; i++) {
+        console.log('List ' + (i + 1));
+        for (const person of this.person_lists[i]) {
+          console.log(`- ${person.name}`);
+        }
+      }
+    },
+  },
+  directives: {
+    sortableDataTable: {
+      bind(el, binding, vnode) {
+        const options = {
+          animation: 150,
+          onUpdate: function (event) {
+            vnode.child.$emit('sorted', event);
+          },
+        };
+        Sortable.create(el.getElementsByTagName('tbody')[0], options);
+      },
+    },
+  },
 };
+
 
 </script>
 
 
 <style scoped>
+
+.hidden-ghost {
+  visibility: hidden;
+}
 
 </style>

@@ -2,25 +2,36 @@ export const UserModule = {
     namespaced: true,
 
     state: {
-        user: null,
-        loggedIn: false,
+        active_user: null,
+        logged_in: false,
     },
 
     mutations: {
-        SET_USER(state, user) {
-            state.user = user;
+        SET_ACTIVE_USER(state, user) {
+            state.active_user = user;
+        },
+        CLEAR_ACTIVE_USER(state) {
+            state.active_user = null;
         },
         SET_LOGGED_IN(state, loggedIn) {
-            state.loggedIn = loggedIn;
-        }
+            state.logged_in = loggedIn;
+        },
     },
 
     actions: {
-        setUser({commit}, user) {
-            commit('SET_USER', user);
+        setActiveUser({commit}, user) {
+            commit('SET_ACTIVE_USER', user);
+        },
+        clearActiveUser({commit}) {
+            commit('CLEAR_ACTIVE_USER');
         },
         setLoggedIn({commit}, loggedIn) {
             commit('SET_LOGGED_IN', loggedIn);
-        }
+        },
+
+        logOut({dispatch}) {
+            dispatch('clearActiveUser');
+            dispatch('setLoggedIn', false);
+        },
     },
-}
+};

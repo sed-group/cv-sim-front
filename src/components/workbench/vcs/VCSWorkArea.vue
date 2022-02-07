@@ -1,9 +1,7 @@
 <template>
-  <v-card
-      v-if="Object.keys(vcs).length === 0"
-      flat
-      style="display: grid; place-items: center; height: calc(100vh - 64px);"
-  >
+  <v-card v-if="!!vcs === false"
+          style="display: grid; place-items: center; height: calc(100vh - 64px);"
+          flat>
     <v-card-subtitle>Please select or create a VCS in the menu to the left</v-card-subtitle>
   </v-card>
 
@@ -22,7 +20,7 @@
       <v-divider></v-divider>
     </div>
 
-    <VCSTable :vcs_id="vcs.id" :vcs_table="vcs_table"></VCSTable>
+    <VCSTable :vcs_table="vcs_table"></VCSTable>
 
   </div>
 </template>
@@ -36,9 +34,7 @@ import Notification from '@/models/utils/Notification';
 export default {
   name: 'VCSWorkArea',
 
-  props: [
-    'vcs',
-  ],
+  props: [],
 
   components: {
     VCSTable,
@@ -51,25 +47,12 @@ export default {
   },
 
   methods: {
-    get_vcs_table(vcs_id) {
-      const project_id = this.$route.params.project_id;
-      CVSVCSService.get_vcs_table(project_id, vcs_id)
-          .catch(error => {
-            console.log(error);
-            Notification.emit_standard_error_message();
-          })
-          .then(data => {
-            if (!!data) {
-              this.vcs_table = data.table_rows;
-            }
-          });
-    },
+
   },
 
-  watch: {
+  computed: {
     vcs() {
-      this.vcs_table = [];
-      this.get_vcs_table(this.vcs.id);
+      return this.$store.state.VCS.active_vcs;
     },
   },
 

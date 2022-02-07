@@ -66,7 +66,7 @@ router.push = function push(location, onResolve, onReject) {
 router.beforeEach((to, from, next) => {
 
     const requires_auth = to.matched.some(record => record.meta.requiresAuth);
-    const is_logged_in = store.state.User.loggedIn;
+    const is_logged_in = store.state.User.logged_in;
 
     // Different homepage if logged in
     if (is_logged_in === true) {

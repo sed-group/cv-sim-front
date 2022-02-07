@@ -82,7 +82,7 @@
 
         <v-tooltip bottom max-width="400">
           <template v-slot:activator="{ on ,attrs}">
-            <th v-bind="attrs" v-on="on" style="width: 300px">Stakeholder expectaions</th>
+            <th v-bind="attrs" v-on="on" style="width: 300px; cursor: help">Stakeholder expectaions</th>
           </template>
           <span>
             Stakeholder expressed expectations are expectations that have been stated by stakeholders. In contrast,
@@ -95,7 +95,7 @@
 
         <v-tooltip bottom max-width="400">
           <template v-slot:activator="{ on ,attrs}">
-            <th v-bind="attrs" v-on="on" style="width: 170px">Stakeholder needs</th>
+            <th v-bind="attrs" v-on="on" style="width: 170px; cursor: help">Stakeholder needs</th>
           </template>
           <span>
             Stakeholder Needs are high-level statements of problems that need to be solved by a new or re-used system
@@ -108,7 +108,7 @@
 
         <v-tooltip bottom max-width="400">
           <template v-slot:activator="{ on ,attrs}">
-            <th v-bind="attrs" v-on="on" style="width: 40px">Rank weight</th>
+            <th v-bind="attrs" v-on="on" style="width: 40px; cursor: help">Rank weight</th>
           </template>
           <span>
             The relative importance of the Stakeholder Needs, used to create a profile of interest for a study (Value
@@ -118,7 +118,7 @@
 
         <v-tooltip bottom max-width="400">
           <template v-slot:activator="{ on ,attrs}">
-            <th v-bind="attrs" v-on="on" style="width: 150px">Value Drivers</th>
+            <th v-bind="attrs" v-on="on" style="width: 150px; cursor: help">Value Drivers</th>
           </template>
           <span>
             Value drivers indicate Key Engineering Characteristics given a specific Value Creation Strategy (i.e. for a
@@ -476,14 +476,7 @@ import ValueDrivers from '@/models/ValueDrivers';
 export default {
   name: 'VCSTable',
 
-  props: {
-    vcs_id: {
-      type: Number,
-    },
-    vcs_table: {
-      type: Array,
-    },
-  },
+  props: {},
 
   components: {
     LoadingAnimaiton,
@@ -504,6 +497,7 @@ export default {
       edit: false,
       editing_row_id: null,
 
+      vcs_table: null,
       displayed_table: null,
 
       rules: {
@@ -532,7 +526,6 @@ export default {
     },
     on_iso_process_selected(iso_process_id) {
       const iso_process = ISOProcesses.find(obj => obj.id === iso_process_id);
-      console.log(iso_process);
       if (!!this.editing_row_id) {
         const index = this.displayed_table.findIndex(obj => obj.id === this.editing_row_id);
         this.displayed_table[index].iso_process = iso_process;
@@ -569,14 +562,11 @@ export default {
         new_row.row_index = row.row_index;
 
         // Process
-        console.log(row);
         new_row.iso_process_id = undefined;
         new_row.subprocess_id = undefined;
         if (row.iso_process) {
-          console.log('ISO process exists');
           new_row.iso_process_id = row.iso_process.id;
         } else if (row.subprocess) {
-          console.log('Subprocesses exists');
           new_row.subprocess_id = row.subprocess.id;
         }
 
@@ -595,13 +585,10 @@ export default {
           };
         });
 
-        console.log('new_row:');
-        console.log(new_row);
-
         table_rows.push(new_row);
       }
 
-      CVSVCSService.create_vcs_table(this.$route.params.project_id, this.vcs_id, table_rows)
+      CVSVCSService.create_vcs_table(this.$route.params.project_id, this.vcs.id, table_rows)
           .catch(error => {
             console.error('error:');
             console.error(error);
@@ -628,7 +615,6 @@ export default {
             this.save_loading = false;
           });
     },
-
 
 
     add_row() {
@@ -717,31 +703,53 @@ export default {
       this.edit = true;
     },
 
+    get_vcs_table() {
+      this.edit = false;
+      this.table_loading = true;
+      CVSVCSService.get_vcs_table(this.project.id, this.vcs.id)
+          .catch(error => {
+            console.log(error);
+            Notification.emit_standard_error_message();
+            this.table_loading = false;
+          })
+          .then(data => {
+            if (!!data) {
+              this.vcs_table = data.table_rows;
+              if (this.vcs_table.length === 0) {
+                this.no_table = true;
+              } else {
+                this.no_table = false;
+                this.displayed_table = JSON.parse(JSON.stringify(this.vcs_table));
+                this.displayed_table.sort((a, b) => (a.row_index > b.row_index) ? 1 : -1);
+              }
+            }
+            this.table_loading = false;
+          });
+    },
+
   },
 
   watch: {
-    vcs_table() {
-      this.edit = false;
-      this.table_loading = true;
-      if (this.vcs_table.length === 0) {
-        this.no_table = true;
-      } else {
-        this.no_table = false;
-        this.displayed_table = this.vcs_table.slice();
-        this.displayed_table.sort((a, b) => (a.row_index > b.row_index) ? 1 : -1);
+    vcs() {
+      this.vcs_table = null;
+      if (!!this.vcs) {
+        this.get_vcs_table();
       }
-      setTimeout(() => { // need a delay for it to show
-        this.table_loading = false;
-      }, 500);
     },
   },
 
   computed: {
+    vcs() {
+      return this.$store.state.VCS.active_vcs;
+    },
+    project() {
+      return this.$store.state.Project.active_project;
+    },
     value_drivers() {
-      return this.$store.state.value_drivers;
+      return this.$store.state.ValueDrivers.value_driver_list;
     },
     subprocesses() {
-      return this.$store.state.subprocesses;
+      return this.$store.state.Subprocesses.subprocess_list;
     },
   },
 

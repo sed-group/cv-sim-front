@@ -2,16 +2,16 @@ import store from '../store/index';
 
 class Subprocesses {
 
-    constructor(subprocesses = []) {
-        this.subprocesses = subprocesses;
+    static add_to_list(subprocess) {
+        store.dispatch('Subprocesses/addSubprocessToList', subprocess);
     }
 
-    push() {
-        store.dispatch('updateSubprocesses', this.subprocesses);
+    static update_list(subprocesses) {
+        store.dispatch('Subprocesses/updateSubprocessList', subprocesses);
     }
 
-    static clear() {
-        store.dispatch('clearSubprocesses');
+    static clear_list() {
+        store.dispatch('Subprocesses/clearSubprocesList');
     }
 
 }

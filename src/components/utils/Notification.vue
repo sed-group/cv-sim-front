@@ -8,8 +8,8 @@
         <!-- just some extra space/padding -->
       </v-col>
     </v-row>
-    <div class="fraction" v-if="total !== 1">{{ index + 1 }} of {{ total }}</div>
-    <v-btn class="close-btn" icon @click="close">
+    <div class="fraction" v-if="total !== 1">{{ index + 1 }} of {{ total }} {{ notification.closeable }}</div>
+    <v-btn class="close-btn" v-if="notification.closeable === true" icon @click="close">
       <v-icon>mdi-close</v-icon>
     </v-btn>
   </v-alert>

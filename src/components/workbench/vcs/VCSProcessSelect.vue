@@ -244,7 +244,7 @@ export default {
 
   computed: {
     subprocesses() {
-      return this.$store.state.subprocesses;
+      return this.$store.state.Subprocesses.subprocess_list;
     },
   },
 

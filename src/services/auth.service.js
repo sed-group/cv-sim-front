@@ -1,6 +1,7 @@
-import httpClient from '../http-client';
-import store from './../store/index';
+import httpClient from '@/http-client';
+import store from '@/store/index';
 import User from '@/models/User';
+import router from '@/router';
 
 const API_EXTENSION = 'core/auth/';
 
@@ -16,18 +17,12 @@ class AuthService {
 
         return httpClient.post(API_EXTENSION + 'token', bodyFormData, {headers: headers})
             .then(response => {
-
-                // temporary request
-
-
                 if (response.data.access_token) {
                     localStorage.setItem('token', response.data.access_token);
                     store.dispatch('User/setLoggedIn', true);
-
                     httpClient.get('core/users/me', bodyFormData, {headers: headers})
                         .then(response => {
-                            store.dispatch('User/setUser', new User(response.data));
-                            store.dispatch('clearAllLogOut');
+                            store.dispatch('User/setActiveUser', new User(response.data));
                         });
                 }
             });
@@ -35,8 +30,8 @@ class AuthService {
 
     logout() {
         localStorage.removeItem('token');
-        store.dispatch('User/setLoggedIn', false);
-        store.dispatch('clearNotifications');
+        store.dispatch('logOut');
+        router.push({name: 'Home'});
     }
 }
 

@@ -60,6 +60,7 @@
 
 
 <script>
+import Notification from '@/models/utils/Notification';
 
 export default {
   name: 'ProjectsList',

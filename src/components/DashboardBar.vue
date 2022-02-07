@@ -2,7 +2,7 @@
   <v-system-bar app height="60">
 
     <!-- logo -->
-    <router-link :to="{ name: 'Dashboard' }" class="mr-4" >
+    <router-link :to="{ name: 'Dashboard' }" class="mr-4">
       <v-img
           src="@/assets/logo-small.svg"
           alt="CV-S logo"
@@ -16,7 +16,7 @@
 
     <v-spacer></v-spacer>
 
-    <LoggedInUserInfo :user="user"></LoggedInUserInfo>
+    <LoggedInUserInfo></LoggedInUserInfo>
 
   </v-system-bar>
 </template>
@@ -25,11 +25,11 @@
 import LoggedInUserInfo from '@/components/user/LoggedInUserInfo';
 
 export default {
-  name: 'SystemBar',
+  name: 'DashboardBar',
 
   components: {LoggedInUserInfo},
 
-  props: ['user'],
+  props: [],
 
   data: () => ({}),
 

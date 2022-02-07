@@ -2,26 +2,51 @@ export const ProjectModule = {
     namespaced: true,
 
     state: {
-        project: null,
+        active_project: null,
+        project_list: [],
     },
 
     mutations: {
-        SET_PROJECT(state, project) {
-            state.project = project;
+        SET_ACTIVE_PROJECT(state, project) {
+            state.active_project = project;
         },
-        SET_PROJECT_ARCHETYPE(state, archetypeID) {
-            if (!state.project) return;
-            state.project.archetypeID = archetypeID;
+        CLEAR_ACTIVE_PROJECT(state) {
+            state.active_project = null;
+        },
+
+        ADD_PROJECT_TO_LIST(state, project) {
+            state.project_list.push(project);
+        },
+        UPDATE_PROJECT_LIST(state, project_list) {
+            state.project_list = project_list;
+        },
+        CLEAR_PROJECT_LIST(state) {
+            state.project_list = [];
         },
     },
 
     actions: {
-        async setProject({commit}, project) {
-            commit('SET_PROJECT', project)
-
+        setActiveProject({commit}, project) {
+            commit('SET_ACTIVE_PROJECT', project);
         },
-        async setProjectArchetype({commit}, archetypeID) {
-            commit('SET_PROJECT_ARCHETYPE', archetypeID);
+        clearActiveProject({commit}) {
+            commit('CLEAR_ACTIVE_PROJECT');
+        },
+
+        addProjectToList({commit}, project) {
+            commit('ADD_PROJECT_TO_LIST', project);
+        },
+        updateProjectList({commit}, project_list) {
+            commit('UPDATE_PROJECT_LIST', project_list);
+        },
+        clearProjectList({commit}) {
+            commit('CLEAR_PROJECT_LIST');
+        },
+
+        logOut({dispatch}) {
+            dispatch('clearActiveProject');
+            dispatch('clearProjectList');
         },
     },
-}
+
+};

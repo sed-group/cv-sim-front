@@ -9,7 +9,7 @@
       <v-list-item-group v-model="list_selection">
         <v-list-item v-for="vcs in vcs_list"
                      @click="vcs_selected(vcs.id)"
-                     :class="'vcs-with-id-' + vcs.id">
+                     :class="'vcs-list-item vcs-with-id-' + vcs.id">
 
           <v-list-item-content>
             <v-card :loading="vcs.loading === true"
@@ -70,7 +70,7 @@
     <v-tooltip top>
       <template v-slot:activator="{ on, attrs }">
         <v-btn
-            @click="new_vcs_form = true"
+            @click="show_new_vcs_form = true"
             fab
             class="new-vcs-btn"
             color="primary"
@@ -85,16 +85,16 @@
 
 
     <NewVCSForm
-        :show="new_vcs_form"
-        @close="new_vcs_form = false"
+        :show="show_new_vcs_form"
+        @close="show_new_vcs_form = false"
         @vcs-created="on_vcs_created"
     ></NewVCSForm>
 
 
     <EditVCSForm
-        :show="edit_vcs_form"
+        :show="show_edit_vcs_form"
         :vcs="vcs_to_edit"
-        @close="edit_vcs_form = false"
+        @close="show_edit_vcs_form = false"
         @vcs-edited="on_vcs_edited"
     ></EditVCSForm>
 
@@ -120,16 +120,14 @@ import LoadingAnimaiton from '@/components/utils/LoadingAnimaiton';
 import NewVCSForm from '@/components/workbench/vcs/forms/NewVCSForm';
 
 import Notification from '@/models/utils/Notification';
+import VCS from '@/models/VCS';
 
 import CVSVCSService from '@/services/cvs-vcs.service';
 
 export default {
   name: 'VCSSidebarContent',
 
-  props: [
-    'project',
-    'vcs_list',
-  ],
+  props: [],
 
   components: {
     LoadingAnimaiton,
@@ -141,42 +139,48 @@ export default {
   data() {
     return {
       list_selection: null,
-      new_vcs_form: false,
-      edit_vcs_form: false,
+      show_new_vcs_form: false,
+      show_edit_vcs_form: false,
       vcs_to_edit: {},
     };
   },
 
   methods: {
+    vcs_selected(id) {
+      const vcs = this.vcs_list.find(item => item.id === id);
+      if (!!vcs) VCS.set_active(vcs);
+    },
     on_vcs_created(vcs) {
-      this.vcs_list.push(vcs);
+      VCS.add_to_list(vcs);
     },
     on_vcs_edited(vcs) {
-      const index = this.vcs_list.findIndex(obj => obj.id === vcs.id);
+      const index = this.vcs_list.findIndex(item => item.id === vcs.id);
       this.vcs_list[index] = vcs;
-    },
-    vcs_selected(id) {
-      this.$emit('vcs-selected', id);
     },
     duplicate_vcs(vcs) {
       vcs.loading = true;
-      const project_id = this.$route.params.project_id;
-      const duplicate = vcs.slice();
-      CVSVCSService.create_vcs(project_id, vcs)
+      const duplicate = JSON.parse(JSON.stringify(vcs));
+      duplicate.name += ' COPY';
+      CVSVCSService.create_vcs(this.project.id, duplicate)
           .catch(error => {
             console.error(error);
             Notification.emit_standard_error_message();
             vcs.loading = false;
           })
-          .then(vcs => {
-            this.vcs_list.push(vcs);
-            new Notification('success', `VCS "${vcs.name}" duplicated.`).push();
+          .then(new_vcs => {
+            VCS.add_to_list(new_vcs);
+            new Notification(
+                'success',
+                `VCS "${vcs.name}" duplicated into "${new_vcs.name}".`,
+                3000,
+            ).push();
             vcs.loading = false;
           });
+      // todo: copy table as well
     },
     edit_vcs(vcs) {
       this.vcs_to_edit = vcs;
-      this.edit_vcs_form = true;
+      this.show_edit_vcs_form = true;
     },
     delete_vcs(id) {
       const vcs = this.vcs_list.find(item => item.id === id);
@@ -192,8 +196,10 @@ export default {
               .then(data => {
                 vcs.loading = false;
                 if (data === true) {
+                  const new_vcs_list = JSON.parse(JSON.stringify(this.vcs_list)).filter(item => item.id !== id);
                   $('.vcs-with-id-' + id).fadeOut(500, () => {
-                    this.vcs_list = this.vcs_list.filter(item => item.id !== id);
+                    VCS.update_list(new_vcs_list);
+                    $('.vcs-list-item').show(); // has to be used otherwise some elements are hidden
                   });
                 }
               });
@@ -203,6 +209,16 @@ export default {
       });
     },
   },
+
+  computed: {
+    project() {
+      return this.$store.state.Project.active_project;
+    },
+    vcs_list() {
+      return this.$store.state.VCS.vcs_list;
+    },
+  },
+
 };
 </script>
 

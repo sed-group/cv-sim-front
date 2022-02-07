@@ -81,7 +81,7 @@ export default {
   methods: {
     get_value_drivers() {
       this.loading.value_drivers = true;
-      ValueDrivers.clear();
+      ValueDrivers.clear_list();
       const project_id = this.$route.params.project_id;
       VCSValueDriversService.get_all(project_id)
           .catch(error => {
@@ -94,14 +94,14 @@ export default {
             const value_drivers = response.chunk;
             if (!!value_drivers) {
               value_drivers.sort((a, b) => (a.id > b.id) ? 1 : -1);
-              new ValueDrivers(value_drivers).push();
+              ValueDrivers.update_list(value_drivers);
             }
           });
     },
 
     get_subprocesses() {
       this.loading.subprocesses = true;
-      Subprocesses.clear();
+      Subprocesses.clear_list();
       const project_id = this.$route.params.project_id;
       VCSSubprocessesService.get_all(project_id)
           .catch(error => {
@@ -114,40 +114,36 @@ export default {
             const subprocesses = response.chunk;
             if (!!subprocesses) {
               subprocesses.sort((a, b) => (a.id > b.id) ? 1 : -1);
-              new Subprocesses(subprocesses).push();
+              Subprocesses.update_list(subprocesses);
             }
           });
     },
 
     on_value_driver_created(new_value_driver) {
-      const value_drivers = this.value_drivers.slice();
-      value_drivers.push(new_value_driver);
-      new ValueDrivers(value_drivers).push();
+      ValueDrivers.add_to_list(new_value_driver);
     },
     on_value_driver_edited(new_value_driver) {
-      const value_drivers = this.value_drivers.slice();
+      const value_drivers = JSON.parse(JSON.stringify(this.value_drivers));
       const index = value_drivers.findIndex(item => item.id === new_value_driver.id);
       value_drivers[index].name = new_value_driver.name;
-      new ValueDrivers(value_drivers).push();
+      ValueDrivers.update_list(value_drivers);
     },
     on_value_driver_deleted(id) {
-      new ValueDrivers(this.value_drivers.filter(item => item.id !== id)).push();
+      ValueDrivers.update_list(this.value_drivers.filter(item => item.id !== id));
     },
 
     on_subprocess_created(new_subprocess) {
-      const subprocesses = this.subprocesses.slice();
-      subprocesses.push(new_subprocess);
-      new Subprocesses(subprocesses).push();
+      Subprocesses.add_to_list(new_subprocess);
     },
     on_subprocess_edited(new_subprocess) {
-      const subprocesses = this.subprocesses.slice();
+      const subprocesses = JSON.parse(JSON.stringify(this.subprocesses));
       const index = subprocesses.findIndex(item => item.id === new_subprocess.id);
       subprocesses[index].name = new_subprocess.name;
       subprocesses[index].parent_process = new_subprocess.parent_process;
-      new Subprocesses(subprocesses).push();
+      Subprocesses.update_list(subprocesses);
     },
     on_subprocess_deleted(id) {
-      new Subprocesses(this.subprocesses.filter(item => item.id !== id)).push();
+      Subprocesses.update_list(this.subprocesses.filter(item => item.id !== id));
     },
 
   },
@@ -166,10 +162,10 @@ export default {
 
   computed: {
     value_drivers() {
-      return this.$store.state.value_drivers;
+      return this.$store.state.ValueDrivers.value_driver_list;
     },
     subprocesses() {
-      return this.$store.state.subprocesses;
+      return this.$store.state.Subprocesses.subprocess_list;
     },
   },
 

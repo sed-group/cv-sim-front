@@ -1,7 +1,7 @@
 <template>
   <div class="dashboard">
 
-    <SystemBar :user="user"></SystemBar>
+    <DashboardBar></DashboardBar>
 
     <v-navigation-drawer
         app
@@ -54,20 +54,15 @@
 
 
 <script>
-
 import ProjectsView from '@/components/projects/ProjectsView';
-import SystemBar from '@/components/SystemBar';
-
-import UserService from '@/services/user.service';
-import store from '@/store';
-import User from '@/models/User';
+import DashboardBar from '@/components/DashboardBar';
 
 export default {
   name: 'Dashboard',
 
   components: {
     ProjectsView,
-    SystemBar,
+    DashboardBar,
   },
 
   data: () => ({
@@ -78,20 +73,17 @@ export default {
   methods: {},
 
   mounted() {
-    if (this.$store.state.User.loggedIn) {
-      UserService.getMe()
-          .then(data => {
-            if (data) {
-              store.dispatch('User/setUser', new User(data));
-            }
-          })
-          .finally(() => {
-            this.user = store.state.User.user;
-          });
+    if (this.$store.state.User.logged_in) {
+      // UserService.getMe()
+      //     .then(data => {
+      //       if (data) {
+      //         store.dispatch('User/setActiveUser', new User(data));
+      //       }
+      //     });
     }
   },
-};
 
+};
 </script>
 
 

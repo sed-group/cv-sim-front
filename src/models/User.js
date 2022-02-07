@@ -1,9 +1,15 @@
+import store from '@/store';
+
 class User {
-    constructor(dbUserObject) {
-        this.id = dbUserObject.id;
-        this.username = dbUserObject.username;
-        this.email = dbUserObject.email;
-        this.full_name = dbUserObject.full_name;
+    constructor(user) {
+        this.id = user.id;
+        this.username = user.username;
+        this.email = user.email;
+        this.full_name = user.full_name;
+    }
+
+    static set_active_user(user) {
+        store.dispatch('User/setActiveUser', user);
     }
 }
 

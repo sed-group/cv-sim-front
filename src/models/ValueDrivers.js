@@ -2,16 +2,16 @@ import store from '../store/index';
 
 class ValueDrivers {
 
-    constructor(value_drivers = []) {
-        this.value_drivers = value_drivers;
+    static add_to_list(value_driver) {
+        store.dispatch('ValueDrivers/addValueDriverToList', value_driver);
     }
 
-    push() {
-        store.dispatch('updateValueDrivers', this.value_drivers);
+    static update_list(value_drivers) {
+        store.dispatch('ValueDrivers/updateValueDriverList', value_drivers);
     }
 
-    static clear() {
-        store.dispatch('clearValueDrivers');
+    static clear_list() {
+        store.dispatch('ValueDrivers/clearValueDriverList');
     }
 
 }

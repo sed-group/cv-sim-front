@@ -12,72 +12,83 @@
           You have not created any subprocesses yet.
         </div>
 
-        <div v-else v-for="group in subprocess_groups" class="mb-5">
-
-          <v-tooltip left color="primary">
-            <template v-slot:activator="{ on, attrs }">
-              <span class="text-h6" v-bind="attrs" v-on="on">{{ group.parent_process.name }}</span>
-            </template>
-            <span>{{ group.parent_process.category }}</span>
-          </v-tooltip>
-
-          <v-list v-if="subprocesses.length > 0">
-            <template v-for="(process, index) in group.subprocesses">
-              <v-menu absolute offset-y :key="process.id">
-                <template v-slot:activator="{ on, attrs }">
-                  <v-list-item v-bind="attrs"
-                               v-on="on"
-                               :class="'subprocess-with-id-' + process.id"
-                               :disabled="process.loading === true"
-                  >
-                    <v-list-item-content>
-                      <v-card :loading="process.loading === true"
-                              loader-height="30"
-                              style="background-color: transparent"
-                              flat>
-                        <v-list-item-title>
-                          {{ process.name }}
-                        </v-list-item-title>
-                        <v-list-item-subtitle>
-                          Subprocess of <b>{{ process.parent_process.category }}: {{ process.parent_process.name }}</b>
-                        </v-list-item-subtitle>
-                      </v-card>
-                    </v-list-item-content>
-                  </v-list-item>
-                </template>
-                <v-list>
-                  <v-list-item key="1" link @click="edit_process(process)">
-                    <v-list-item-icon>
-                      <v-icon>mdi-pencil</v-icon>
-                    </v-list-item-icon>
-                    <v-list-item-title>Edit</v-list-item-title>
-                  </v-list-item>
-                  <v-list-item key="2" link @click="delete_process(process.id)">
-                    <v-list-item-icon>
-                      <v-icon>mdi-delete</v-icon>
-                    </v-list-item-icon>
-                    <v-list-item-title>Delete</v-list-item-title>
-                  </v-list-item>
-                </v-list>
-              </v-menu>
-              <v-divider :class="'divider-for-subprocess-' + process.id"
-                         v-if="index !== (group.subprocesses.length - 1)"></v-divider>
-            </template>
+        <div v-else class="mb-16">
+          <v-list v-for="(group, index_outer) in grouped_processes" :disabled="group.disabled === true">
+            <v-list-group :value="true" eager class="hej">
+              <template v-slot:activator>
+                <v-list-item-content>
+                  <v-list-item-title v-text="group.parent_process.name"></v-list-item-title>
+                </v-list-item-content>
+              </template>
+              <draggable :list="grouped_processes[index_outer].subprocesses"
+                         @change="on_subprocess_reorder"
+                         animation="150"
+                         ghost-class="draggable-ghost-class"
+                         :disabled="group.disabled === true"
+              >
+                <div v-for="(process, index) in group.subprocesses" :key="process.id">
+                  <v-menu absolute offset-y :key="process.id" :disabled="process.loading === true" eager>
+                    <template v-slot:activator="{ on, attrs }">
+                      <v-hover v-slot="{ hover }">
+                        <v-list-item v-bind="attrs" v-on="on"
+                                     :class="['subprocess-with-id-' + process.id, (group.disabled === true ? 'greyed-out' : null), 'added-transition']"
+                                     :disabled="process.loading === true || group.disabled === true"
+                                     :key="index"
+                        >
+                          <v-list-item-content>
+                            <v-card :loading="process.loading === true"
+                                    loader-height="30"
+                                    style="background-color: transparent"
+                                    flat
+                            >
+                              <v-list-item-title>
+                                {{ process.name }}
+                              </v-list-item-title>
+                              <v-list-item-subtitle>
+                                Subprocess of <b>
+                                {{ process.parent_process.category }}: {{ process.parent_process.name }}</b>
+                              </v-list-item-subtitle>
+                            </v-card>
+                          </v-list-item-content>
+                        </v-list-item>
+                      </v-hover>
+                    </template>
+                    <v-list>
+                      <v-list-item key="1" link @click="edit_process(process)">
+                        <v-list-item-icon>
+                          <v-icon>mdi-pencil</v-icon>
+                        </v-list-item-icon>
+                        <v-list-item-title>Edit</v-list-item-title>
+                      </v-list-item>
+                      <v-list-item key="2" link @click="delete_process(process.id)">
+                        <v-list-item-icon>
+                          <v-icon>mdi-delete</v-icon>
+                        </v-list-item-icon>
+                        <v-list-item-title>Delete</v-list-item-title>
+                      </v-list-item>
+                    </v-list>
+                  </v-menu>
+                  <v-divider :class="'divider-for-subprocess-' + process.id"
+                             v-if="index !== (group.subprocesses.length - 1)"></v-divider>
+                </div>
+              </draggable>
+            </v-list-group>
           </v-list>
         </div>
+
+
       </div>
 
 
       <!-- CREATE NEW BUTTON -->
-      <v-tooltip top>
+      <v-tooltip left>
         <template v-slot:activator="{ on, attrs }">
-          <v-btn fab
+          <v-btn @click="show_form = true"
                  style="position: absolute; bottom: 3em; right: 2em; z-index: 1"
                  color="primary"
                  v-bind="attrs"
                  v-on="on"
-                 @click="show_form = true"
-          >
+                 fab>
             <v-icon>mdi-plus</v-icon>
           </v-btn>
         </template>
@@ -174,23 +185,22 @@
 
 
 <script>
+import draggable from 'vuedraggable';
+import Vue from 'vue';
+
 import VCSProcessSelect from '@/components/workbench/vcs/VCSProcessSelect';
 import VCSSubprocessesService from '@/services/vcs-subprocess.service';
 import LoadingAnimaiton from '@/components/utils/LoadingAnimaiton';
 import ConfirmDialog from '@/components/utils/ConfirmDialog';
 
 import ISOProcesses from '@/models/ISOProcesses';
+import Notification from '@/models/utils/Notification';
 
 export default {
   name: 'VCSSubprocesses',
 
   props: {
-    subprocesses: {
-      type: Array,
-      default() {
-        return [];
-      },
-    },
+    subprocesses: {},
     loading_anim: {
       type: Boolean,
       default: true,
@@ -201,6 +211,7 @@ export default {
     ConfirmDialog,
     LoadingAnimaiton,
     VCSProcessSelect,
+    draggable,
   },
 
   data() {
@@ -229,6 +240,7 @@ export default {
       iso_processes: ISOProcesses,
       no_processes: false,
 
+      grouped_processes: [],
     };
   },
 
@@ -256,10 +268,12 @@ export default {
               .then(response => {
                 process.loading = false;
                 if (response === true) {
-                  $('.subprocess-with-id-' + id).fadeOut(500);
-                  $('.divider-for-subprocess-' + id).fadeOut(500, () => {
-                    this.$emit('subprocess-deleted');
-                  });
+                  const timer = 500; // [ms]
+                  $('.subprocess-with-id-' + id).fadeOut(timer);
+                  $('.divider-for-subprocess-' + id).fadeOut(timer);
+                  setTimeout(() => {
+                    this.$emit('subprocess-deleted', id);
+                  }, timer);
                 }
               });
         }
@@ -282,14 +296,16 @@ export default {
     submit_form() {
       if (this.$refs.form.validate()) {
         this.loading = true;
-        const project_id = this.$route.params.project_id;
         const new_subprocess = {
           name: this.form_subprocess_name,
           parent_process_id: this.form_parent_process.id,
         };
 
         if (this.form_type === 'create') {
-          VCSSubprocessesService.create_one(project_id, new_subprocess)
+          const group = this.grouped_processes.find(item => item.parent_process.id === this.form_parent_process.id);
+          const max_index = !!group ? Math.max.apply(Math, group.subprocesses.map(item => item.order_index)) : 0;
+          new_subprocess.order_index = max_index + 1;
+          VCSSubprocessesService.create_one(this.project.id, new_subprocess)
               .catch(error => {
                 console.error(error);
                 this.valid = false;
@@ -298,9 +314,10 @@ export default {
                 this.$emit('subprocess-created', subprocess);
                 this.close_form();
               });
+
         } else if (this.form_type === 'edit') {
           new_subprocess.id = this.subprocess_editing_id;
-          VCSSubprocessesService.edit_one(project_id, new_subprocess)
+          VCSSubprocessesService.edit_one(this.project.id, new_subprocess)
               .catch(error => {
                 console.error(error);
                 this.valid = false;
@@ -319,40 +336,64 @@ export default {
     },
 
     on_iso_process_selected(id) {
-      const selected_process = this.iso_processes.find(obj => {
-        return obj.id === id;
-      });
+      const selected_process = this.iso_processes.find(obj => obj.id === id);
       if (!!selected_process) {
         this.form_parent_process = selected_process;
       }
     },
 
+    group_subprocesses() {
+      this.grouped_processes = [];
+      if (!!this.subprocesses) {
+        const unique_parent_process_ids = [...new Set(this.subprocesses.map(item => item.parent_process.id))];
+        unique_parent_process_ids.sort((a, b) => a - b);
+        this.grouped_processes = unique_parent_process_ids.map(id => {
+          const parent_process = this.iso_processes.find(item => item.id === id);
+          const subprocesses = this.subprocesses.filter(item => item.parent_process.id === id);
+          subprocesses.sort((a, b) => (a.order_index > b.order_index) ? 1 : -1);
+          return {parent_process, subprocesses};
+        });
+      }
+      this.no_processes = this.grouped_processes.length === 0;
+    },
+
+    on_subprocess_reorder(event) {
+      const parent_process_id = event.moved.element.parent_process.id;
+      const group = this.grouped_processes.find(item => item.parent_process.id === parent_process_id);
+      Vue.set(group, 'disabled', true);
+
+      const subprocess_ids = [], order_indices = [];
+      for (let i = 0; i < group.subprocesses.length; i++) {
+        subprocess_ids.push(group.subprocesses[i].id);
+        order_indices.push(i + 1);
+      }
+
+      VCSSubprocessesService.update_indices(this.project.id, subprocess_ids, order_indices)
+          .catch(error => {
+            console.error(error);
+            Vue.set(group, 'disabled', false);
+          })
+          .then(response => {
+            if (response === true) {
+              Vue.set(group, 'disabled', false);
+            } else {
+              Notification.emit_standard_error_message();
+            }
+          });
+    },
+
+  },
+
+  watch: {
+    subprocesses() {
+      this.group_subprocesses();
+      this.group_subprocesses();
+    },
   },
 
   computed: {
-    subprocess_groups() {
-      console.log('subprocess_groups()');
-      const grouped_processes = [];
-      if (!!this.subprocesses) {
-        const unique_parent_process_ids = [...new Set(this.subprocesses.map(item => item.parent_process.id))];
-        unique_parent_process_ids.sort();
-        for (const id of unique_parent_process_ids) {
-          grouped_processes.push({
-            parent_process: this.iso_processes.find(item => item.id === id),
-            subprocesses: this.subprocesses.filter(item => item.parent_process.id === id),
-          });
-        }
-      }
-      this.no_processes = grouped_processes.length === 0;
-
-      for (const group of grouped_processes) {
-        console.log(group.parent_process.name);
-        for (const process of group.subprocesses) {
-          console.log(` - ${process.name}`);
-        }
-      }
-
-      return grouped_processes;
+    project() {
+      return this.$store.state.Project.active_project;
     },
   },
 
@@ -362,6 +403,20 @@ export default {
 
 
 <style scoped>
+
+.added-transition {
+  transition: opacity 200ms ease;
+}
+
+.greyed-out {
+  opacity: 30%;
+  transition-duration: 0ms; /* no fade in, just fade out */
+}
+
+.draggable-ghost-class {
+  visibility: hidden;
+}
+
 
 </style>
 
