@@ -1,6 +1,7 @@
 <template>
 
   <div>
+    <!--
     <v-navigation-drawer app permanent>
       <v-list-item>
         <v-list-item-content>
@@ -36,33 +37,11 @@
       </v-list>
 
     </v-navigation-drawer>
+    -->
 
     <div>
       <v-btn @click="loading = !loading">Toggle loading</v-btn>
-
-
-      <div v-for="desserts in desserts_list">
-        <v-data-table
-            :headers="headers"
-            :items="desserts"
-            v-sortable-data-table
-            @sorted="saveOrder"
-            item-key="name"
-        ></v-data-table>
-      </div>
-
-      <div>
-        <v-list two-line v-for="(persons, index) in person_lists">
-          <draggable v-model="person_lists[index]" animation="200" ghost-class="hidden-ghost" @end="hej">
-            <v-list-item v-for="person in persons" link>
-              <v-list-item-content>
-                <v-list-item-title>{{ person.name }}</v-list-item-title>
-                <v-list-item-subtitle>No. {{ person.id }}</v-list-item-subtitle>
-              </v-list-item-content>
-            </v-list-item>
-          </draggable>
-        </v-list>
-      </div>
+      <div id="canvas"></div>
 
     </div>
 
@@ -75,6 +54,11 @@
 import draggable from 'vuedraggable';
 import Sortable from 'sortablejs';
 import LoadingAnimaiton from '@/components/utils/LoadingAnimaiton';
+
+import NavigatedViewer from 'bpmn-js/lib/NavigatedViewer';
+import BpmnModdle from 'bpmn-moddle';
+import BpmnModeler from 'bpmn-js/lib/Modeler';
+import CliModule from 'bpmn-js-cli';
 
 export default {
   name: 'TestingDuringDevelopment',
@@ -185,6 +169,80 @@ export default {
       },
     },
   },
+
+  async mounted() {
+
+
+    // const viewer = NavigatedViewer({
+    //   container: '#canvas',
+    //   additionalModules: [
+    //     BpmnModdle,
+    //   ],
+    //   cli: {
+    //     bindTo: 'cli',
+    //   },
+    // });
+    // const diagramUrl = 'https://cdn.staticaly.com/gh/bpmn-io/bpmn-js-examples/dfceecba/starter/diagram.bpmn';
+    // const bpmnXML = await $.get(diagramUrl, (data) => {
+    //   return data;
+    // });
+    // viewer.importXML(bpmnXML).then(function (result) {
+    //   const {warnings} = result;
+    //   console.log('success !', warnings);
+    //   viewer.get('canvas').zoom('fit-viewport');
+    // }).catch(function (err) {
+    //   const {warnings, message} = err;
+    //   console.log('something went wrong:', warnings, message);
+    // });
+
+    const moddle = new BpmnModdle();
+
+    const xmlStr =
+        '<?xml version="1.0" encoding="UTF-8"?>' +
+        '<bpmn2:definitions xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" ' +
+        'id="empty-definitions" ' +
+        'targetNamespace="http://bpmn.io/schema/bpmn">' +
+        '</bpmn2:definitions>';
+
+
+    const {
+      rootElement: definitions,
+    } = await moddle.fromXML(xmlStr);
+
+    // update id attribute
+    definitions.set('id', 'new_id');
+
+    // add a root element
+    const bpmnProcess = moddle.create('bpmn:Process', {id: 'MyProcess_1'});
+    definitions.get('rootElements').push(bpmnProcess);
+
+    // xmlStrUpdated contains new id and the added process
+    const {
+      xml: xmlStrUpdated,
+    } = await moddle.toXML(definitions);
+
+    const modeler = new BpmnModeler({
+      container: '#canvas',
+    });
+
+    // const bpmn_xml = '<?xml version="1.0" encoding="UTF-8"?>\n' +
+    //     '<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" id="Definitions_1pl9twe" targetNamespace="http://bpmn.io/schema/bpmn" exporter="bpmn-js (https://demo.bpmn.io)" exporterVersion="9.0.0-alpha.2">\n' +
+    //     '  <bpmn:process id="Process_1fxbwpj" isExecutable="false" />\n' +
+    //     '  <bpmndi:BPMNDiagram id="BPMNDiagram_1">\n' +
+    //     '    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1fxbwpj" />\n' +
+    //     '  </bpmndi:BPMNDiagram>\n' +
+    //     '</bpmn:definitions>';
+
+    modeler.importXML(xmlStrUpdated)
+        .then(({warnings}) => {
+          console.log('success !', warnings);
+        })
+        .catch(err => {
+          const {warnings, message} = err;
+          console.log('something went wrong:', warnings, message);
+        });
+
+  },
 };
 
 
@@ -192,6 +250,13 @@ export default {
 
 
 <style scoped>
+
+#canvas {
+  min-width: 500px;
+  min-height: 500px;
+  outline: 1px solid red;
+  margin: 1em;
+}
 
 .hidden-ghost {
   visibility: hidden;
