@@ -20,7 +20,7 @@
       <v-divider></v-divider>
     </div>
 
-    <VCSTable :vcs_table="vcs_table"></VCSTable>
+    <VCSTable :vcs="vcs"></VCSTable>
 
   </div>
 </template>
@@ -41,14 +41,10 @@ export default {
   },
 
   data() {
-    return {
-      vcs_table: [],
-    };
+    return {};
   },
 
-  methods: {
-
-  },
+  methods: {},
 
   computed: {
     vcs() {

@@ -42,7 +42,7 @@
 
       <v-fade-transition leave-absolute>
         <v-card v-show="!edit">
-          <v-btn :color="edit === true ? 'success' : null" @click="edit_clicked">
+          <v-btn @click="edit_clicked">
             <v-icon left>mdi-pencil</v-icon>
             Edit
           </v-btn>
@@ -51,7 +51,7 @@
 
       <v-fade-transition leave-absolute>
         <v-card v-show="edit">
-          <v-btn :loading="save_loading" @click="save_clicked" :disabled="!edit && !save_loading">
+          <v-btn :loading="save_loading" @click="save_clicked" :disabled="!edit && !save_loading" color="success">
             <v-icon left>mdi-content-save</v-icon>
             Save
             <template v-slot:loader>
@@ -306,7 +306,7 @@
 
           <!-- VALUE DRIVERS -->
           <td>
-            <v-select
+            <v-combobox
                 v-if="edit"
                 v-model="row.stakeholder_needs[0].value_drivers"
                 :items="value_drivers"
@@ -318,7 +318,10 @@
                 multiple
                 dense
                 deletable-chips
-            ></v-select>
+                @input="value_driver_combobox(row.stakeholder_needs[0])"
+                :loading="row.stakeholder_needs[0].loading"
+                :disabled="row.stakeholder_needs[0].loading"
+            ></v-combobox>
             <div v-else
                  v-for="value_driver in row.stakeholder_needs[0].value_drivers"
                  class="value-drivers"
@@ -354,7 +357,7 @@
 
           <!-- VALUE DRIVERS -->
           <td>
-            <v-select
+            <v-combobox
                 v-if="edit"
                 v-model="stakeholder_need.value_drivers"
                 :items="value_drivers"
@@ -366,7 +369,10 @@
                 multiple
                 dense
                 deletable-chips
-            ></v-select>
+                @input="value_driver_combobox(stakeholder_need)"
+                :loading="stakeholder_need.loading"
+                :disabled="stakeholder_need.loading"
+            ></v-combobox>
             <div v-else
                  v-for="value_driver in stakeholder_need.value_drivers"
                  class="value-drivers"
@@ -466,12 +472,14 @@
 <script>
 import VCSProcessSelect from '@/components/workbench/vcs/VCSProcessSelect';
 import LoadingAnimaiton from '@/components/utils/LoadingAnimaiton';
+
 import Notification from '@/models/utils/Notification';
 import ISOProcesses from '@/models/ISOProcesses';
+import ValueDrivers from '@/models/ValueDrivers';
 
 import CVSVCSService from '@/services/cvs-vcs.service';
 import VCSValueDriversService from '@/services/vcs-value-drivers.service';
-import ValueDrivers from '@/models/ValueDrivers';
+
 
 export default {
   name: 'VCSTable',
@@ -703,10 +711,10 @@ export default {
       this.edit = true;
     },
 
-    get_vcs_table() {
+    get_vcs_table(vcs_id) {
       this.edit = false;
       this.table_loading = true;
-      CVSVCSService.get_vcs_table(this.project.id, this.vcs.id)
+      CVSVCSService.get_vcs_table(this.project.id, vcs_id)
           .catch(error => {
             console.log(error);
             Notification.emit_standard_error_message();
@@ -727,21 +735,46 @@ export default {
           });
     },
 
-  },
+    handle_value_driver_combobox(stakeholder_need) {
+      // Checking all value drivers and creating any that are just strings
+      const promises = [];
+      let error_occurred;
+      stakeholder_need.value_drivers.forEach(value_driver_str => {
+        if (error_occurred === true) return;
+        if (typeof value_driver_str === 'string') {
+          promises.push(
+              VCSValueDriversService.create_one(this.project.id, {name: value_driver_str})
+                  .catch(error => {
+                    console.error(error);
+                    new Notification('error', `An error occurred when creating the value driver '${value_driver_str}'. Refresh the page and try again.`).push();
+                    error_occurred = true;
+                  })
+                  .then(value_driver => {
+                    stakeholder_need.value_drivers.push(value_driver);
+                    ValueDrivers.add_to_list(value_driver);
+                  }),
+          );
+        }
+      });
 
-  watch: {
-    vcs() {
-      this.vcs_table = null;
-      if (!!this.vcs) {
-        this.get_vcs_table();
+      // Removing the originals of the converted value drivers
+      if (error_occurred !== true) {
+        stakeholder_need.value_drivers = stakeholder_need.value_drivers.filter(item => typeof item !== 'string');
       }
+
+      return Promise.all(promises);
     },
+
+    value_driver_combobox(stakeholder_need) {
+      this.$set(stakeholder_need, 'loading', true);
+      this.handle_value_driver_combobox(stakeholder_need).then(() => {
+        this.$set(stakeholder_need, 'loading', false);
+      });
+    },
+
   },
 
   computed: {
-    vcs() {
-      return this.$store.state.VCS.active_vcs;
-    },
     project() {
       return this.$store.state.Project.active_project;
     },
@@ -750,6 +783,20 @@ export default {
     },
     subprocesses() {
       return this.$store.state.Subprocesses.subprocess_list;
+    },
+    vcs() {
+      const vcs = this.$store.state.VCS.active_vcs;
+      this.vcs_table = null;
+      if (!!vcs) {
+        this.get_vcs_table(vcs.id);
+      }
+      return vcs;
+    },
+  },
+
+  watch: {
+    vcs() {
+      // This needs to be here for it too work. No idea why.
     },
   },
 
@@ -795,6 +842,11 @@ export default {
 .my-table th,
 .my-table td {
   padding: .125em 1em;
+}
+
+.my-table > tr > th,
+.my-table > tbody > tr > td {
+  border-right: 1px solid black
 }
 
 

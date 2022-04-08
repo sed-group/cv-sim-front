@@ -8,7 +8,7 @@ export const VCSModule = {
 
     mutations: {
         SET_ACTIVE_VCS(state, vcs) {
-            state.active_vcs = []; // to retrigger when same VCS is set as active
+            state.active_vcs = undefined; // to retrigger when same VCS is set as active
             state.active_vcs = vcs;
         },
         CLEAR_ACTIVE_VCS(state) {
